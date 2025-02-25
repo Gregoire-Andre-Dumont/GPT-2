@@ -7,7 +7,6 @@ defaults:
 train_path: data/train.parquet
 val_path: data/validation.parquet
 
-# Byte pair tokenizer
-tokenizer:
-  _target_: src.tokenizer.basic.BasicTokenizer
+# Hugging face tokenizer
+token_name: gpt2
 

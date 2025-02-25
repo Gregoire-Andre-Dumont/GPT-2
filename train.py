@@ -4,6 +4,7 @@ import hydra
 import pandas as pd
 from pathlib import Path
 from omegaconf import DictConfig
+from transformers import AutoTokenizer
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
@@ -14,10 +15,14 @@ def run_train(cfg: DictConfig) -> None:
     train = pd.read_parquet(cfg.train_path)['text']
     validation = pd.read_parquet(cfg.val_path)['text']
 
-    # Check whether the tokenizer is already trained
-    tokenizer = hydra.utils.instantiate(cfg.tokenizer)
-    tokenizer.train(train[0][:100], 500)
-    a = 1
+    # Load the pre-trained tokenizer from hugging face
+    tokenizer = AutoTokenizer.from_pretrained(cfg.token_name)
+
+    # Process the train and test prompts
+    train = tokenizer(train[0], return_tensors="np").input_ids
+    test = tokenizer(validation[0], return_tensors="np").input_ids
+
+
 
 
 
