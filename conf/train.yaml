@@ -1,0 +1,5 @@
+train_path: data/train.parquet
+val_path: data/validation.parquet
+chunk_size: 1024
+
+
