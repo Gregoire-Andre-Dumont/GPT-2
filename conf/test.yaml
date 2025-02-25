@@ -1,0 +1,2 @@
+# path to the test dataset
+test_path: data/test.parquet
