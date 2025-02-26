@@ -1,0 +1,19 @@
+# Path to the dataset
+train_path: data/train.parquet
+val_path: data/validation.parquet
+
+# Pre-trained byte-pair encoder
+tokenizer:
+  _target_: src.tokenizer.Tokenizer
+  token: transformers.AutoTokenizer
+  token_name: "gpt2"
+
+# Torch trainer
+trainer:
+  _target_: src.torch_trainer.TorchTrainer
+  epochs: 10
+  batch_size: 32
+  patients: 5
+  learning_rate:  1e-5
+  model_name: "GPT"
+  save_model: False
