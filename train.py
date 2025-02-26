@@ -1,28 +1,20 @@
 """Train.py is the main script for training the model and will take in the raw data and output a trained model."""
 
+import torch
 import hydra
 from omegaconf import DictConfig
-import pandas as pd
-
+from src.setup.setup_data import setup_train_data
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
 def run_train(cfg: DictConfig) -> None:
     """Train the GPT2 model with the text8 dataset."""
 
-    # Load the train and validation text
-    train = pd.read_parquet(cfg.train_path)['text']
-    validation = pd.read_parquet(cfg.val_path)['text']
+    # Load and encode the train and validation
+    train, val = setup_train_data(cfg)
 
-    # Encode both texts using the chosen tokenizer
-    tokenizer = hydra.utils.instantiate(cfg.tokenizer)
-
-    train = tokenizer.encode(train[0][:60])
-    validation = tokenizer.encode(validation[0][:60])
-
-    # Initialize the torch trainer and model
-    trainer = hydra.utils.instantiate(cfg.trainer)
-    b = 1
-
+    # Initialize the torch model
+    model = hydra.utils.instantiate(cfg.model)
+    a = 1
 
 
 
