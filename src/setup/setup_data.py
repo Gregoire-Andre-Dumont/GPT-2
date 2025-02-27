@@ -1,6 +1,5 @@
 """Loads and encodes the text data using a pre-trained tokenizer."""
 
-import torch
 import pandas as pd
 from transformers import AutoTokenizer
 from omegaconf import DictConfig
@@ -17,8 +16,7 @@ def setup_train_data(cfg: DictConfig):
     tokenizer = AutoTokenizer.from_pretrained(cfg.token_name)
 
     # Encode both texts using a pre-trained tokenizer
-    train = tokenizer(train[0][:60], return_tensors="pt").input_ids
-    validation = tokenizer(validation[0][:60], return_tensors="pt").input_ids
+    train = tokenizer(train[0][:60], return_tensors="pt")
+    validation = tokenizer(validation[0][:60], return_tensors="pt")
 
-
-    return train, validation
+    return train.input_ids, validation.input_ids

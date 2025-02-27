@@ -12,12 +12,8 @@ def run_train(cfg: DictConfig) -> None:
     # Load and encode the train and validation
     train, val = setup_train_data(cfg)
 
-    # Initialize the torch model
-    model = hydra.utils.instantiate(cfg.model)
+    # Load and Initialize the model
     a = 1
-
-
-
 
 
 if __name__ == "__main__":

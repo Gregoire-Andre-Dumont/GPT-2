@@ -1,15 +1,9 @@
-defaults:
-  - model: gpt_mini
-
 # Path to the dataset
 train_path: data/train.parquet
 val_path: data/validation.parquet
 
 # Pre-trained Byte-Pair encoder
 token_name: gpt2
-
-# GPT-2 configuration
-
 
 # training parameters
 epochs: 10
