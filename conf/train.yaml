@@ -8,6 +8,9 @@ val_path: data/validation.parquet
 # Pre-trained Byte-Pair encoder
 token_name: gpt2
 
+# GPT-2 configuration
+
+
 # training parameters
 epochs: 10
 patience: 5
