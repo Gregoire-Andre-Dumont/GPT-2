@@ -1,5 +1,5 @@
 """Main script for training the model and will take in the raw data and output a trained model."""
-
+import hydra
 import os
 import time
 import math
@@ -9,15 +9,19 @@ import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
-
+from omegaconf import DictConfig
 from src.model import GPTConfig, GPT
 
 
 
+@hydra.main(version_base=None, config_path="conf", config_name="train")
+def run_train(cfg: DictConfig) -> None:
+    """Train or fine-tune the GPT-2 model using the hydra configuration."""
 
 
 
-
+if __name__ == "__main__":
+    run_train()
 
 
 # system
