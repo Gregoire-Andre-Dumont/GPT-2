@@ -1,22 +1,30 @@
-"""Loads and encodes the text data using a pre-trained tokenizer."""
+"""Module that encodes and decodes the text data using a pre-trained tokenizer."""
 
 import pandas as pd
 from transformers import AutoTokenizer
 from omegaconf import DictConfig
 
-def setup_train_data(cfg: DictConfig):
-    """Load and encode the text data using a pre-trained tokenizer.
-    :param cfg: dictionary containing the paths and tokenizer name."""
-
-    # Load the train and validation text
-    train = pd.read_parquet(cfg.train_path)['text']
-    validation = pd.read_parquet(cfg.val_path)['text']
+def encode_data(cfg: DictConfig):
+    """Load and encode the text data using a pre-trained tokenizer."""
 
     # Load the pre-trained tokenizer from hugging face
     tokenizer = AutoTokenizer.from_pretrained(cfg.token_name)
 
-    # Encode both texts using a pre-trained tokenizer
-    train = tokenizer(train[0][:60], return_tensors="pt")
-    validation = tokenizer(validation[0][:60], return_tensors="pt")
+    # Load the train, validation and test texts
+    train = pd.read_parquet(cfg.train_path)['text']
+    validation = pd.read_parquet(cfg.val_path)['text']
+    test = pd.read_parquet(cfg.val_path)['text']
 
-    return train.input_ids, validation.input_ids
+    # Reduce the dataset size for development
+    train_size = int(len(train) * cfg.train_size)
+    val_size = int(len(validation) * cfg.test_size)
+
+    validation = validation[:val_size]
+    train = train[:train_size]
+
+    # Encode the text data using the tokenizer
+    train = tokenizer(train[0], return_tensors="pt")
+    validation = tokenizer(validation[0], return_tensors="pt")
+    test = tokenizer(test[0], return_tensors="pt")
+
+    return train.input_ids, validation.input_ids, test.input_ids
