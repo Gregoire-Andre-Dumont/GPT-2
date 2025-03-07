@@ -1,30 +1,24 @@
-"""Module that encodes and decodes the text data using a pre-trained tokenizer."""
+"""Module that encodes and decodes the text using Byte-Pair."""
 
+from transformers import GPT2Tokenizer
 import pandas as pd
-from transformers import AutoTokenizer
-from omegaconf import DictConfig
+import numpy as np
 
-def encode_data(cfg: DictConfig):
-    """Load and encode the text data using a pre-trained tokenizer."""
+def encode_data(path: str, development: int | bool):
+    """Encode the text data using a pre-trained encoder.
+
+    :param path: parquet file containing the text.
+    :param development: Reduce the text size for development."""
 
     # Load the pre-trained tokenizer from hugging face
-    tokenizer = AutoTokenizer.from_pretrained(cfg.token_name)
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
-    # Load the train, validation and test texts
-    train = pd.read_parquet(cfg.train_path)['text']
-    validation = pd.read_parquet(cfg.val_path)['text']
-    test = pd.read_parquet(cfg.val_path)['text']
-
-    # Reduce the dataset size for development
-    train_size = int(len(train) * cfg.train_size)
-    val_size = int(len(validation) * cfg.test_size)
-
-    validation = validation[:val_size]
-    train = train[:train_size]
+    # Load and reduce the text data if necessary
+    data = pd.read_parquet(path)['text'][0]
+    data = data[:development] if development else data
 
     # Encode the text data using the tokenizer
-    train = tokenizer(train[0], return_tensors="pt")
-    validation = tokenizer(validation[0], return_tensors="pt")
-    test = tokenizer(test[0], return_tensors="pt")
+    data = tokenizer(data, return_tensors='np')
+    return np.squeeze(data.input_ids)
 
-    return train.input_ids, validation.input_ids, test.input_ids
+

@@ -1,4 +1,0 @@
-# Weight and biases
-wandb_log: False
-wandb_project: 'owt'
-wandb_run_name: 'gpt2'
