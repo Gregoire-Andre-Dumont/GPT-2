@@ -31,6 +31,8 @@ def run_train(cfg: DictConfig) -> None:
     logger.info(f"Validation size: {len(valid)}")
     logger.info(f"Sequence length: {1024}")
 
+    ff = hydra.utils.instantiate(cfg.model.bb)
+
 
     a = 1
 

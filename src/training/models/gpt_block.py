@@ -1,37 +1,36 @@
 """Module that manages the GPT-2 transformer block"""
 
-
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.init import kaiming_normal_
-from src.training.models.attention import MultiHeadAttention
-
-class MLP(nn.Module):
-    def __init__(self, embed_dim, factor=4):
-        super(MLP, self).__init__()
-        self.fc = nn.Linear(embed_dim, embed_dim * factor)
-        self.fc2 = nn.Linear(embed_dim * factor, embed_dim)
-
-        kaiming_normal_(self.fc.weight, nonlinearity="relu")
-        kaiming_normal_(self.fc2.weight, nonlinearity="linear")
-
-        self.fc = self.fc.half()
-        self.fc2 = self.fc2.half()
-
-    def forward(self, x):
-        h = F.gelu(self.fc(x.half()).float())
-        return self.fc2(h.half())
-
+from torch import Tensor
 
 class GPTBlock(nn.Module):
-    def __init__(self, embed_dim, num_heads):
-        super(GPTBlock, self).__init__()
-        self.ln_1 = nn.LayerNorm(embed_dim)
-        self.attn = MultiHeadAttention(embed_dim, num_heads)
-        self.ln_2 = nn.LayerNorm(embed_dim)
-        self.mlp = MLP(embed_dim)
+    def __init__(self, config: dict):
+        """Initialize the torch layers."""
 
-    def forward(self, x):
-        x = x + self.attn(self.ln_1(x))
-        x = x + self.mlp(self.ln_2(x))
-        return x
+        super().__init__()
+
+        # Extract the parameters from the config
+        self.embed: int = config['n_embedding']
+        self.bias: bool = config['bias']
+        self.n_head: int = config['n_head']
+        self.dropout: float = config['dropout']
+
+        # Initialize layer normalization and attention layer
+        self.norm_1 = nn.LayerNorm(self.embed, bias=self.bias)
+        self.norm_2 = nn.LayerNorm(self.embed, bias=self.bias)
+        self.attention = nn.MultiheadAttention(self.embed, self.n_head, self.dropout)
+
+        # Initialize the layers in the feedforward network
+        self.fully = nn.Linear(self.embed, 4 * self.embed, bias=self.bias)
+        self.project = nn.Linear(4 * self.embed, self.embed, bias=self.bias)
+
+        self.dropout = nn.Dropout(self.dropout)
+        self.gelu = nn.GELU()
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the transformer block."""
+
+        z = x + self.attention(self.norm_1(x))
+        x = self.fully(self.norm_2(z))
+        x = self.project(self.gelu(x))
+        return z + self.dropout(x)

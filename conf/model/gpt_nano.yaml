@@ -1,0 +1,25 @@
+defaults:
+  - _self_
+
+torch_trainer:
+  _target_: src.training.torch_trainer.TorchTrainer
+  t_init: 40
+  epochs: 20
+  patience: 5
+  batch_size: 6
+  beta1: 0.90
+  beta2: 0.95
+  grad_clip: 1.0
+  warmup_t: 1
+  warmup_lr: 1e-5
+  learning_rate: 6e-4
+  save_checkpoint: True
+  model:
+    _target_: src.training.models.gpt_model.Model
+    block_size: 1024
+    vocab_size: 50304
+    n_embedding: 768
+    n_layer: 12
+    n_head: 12
+    dropout: 0.0
+    bias: True

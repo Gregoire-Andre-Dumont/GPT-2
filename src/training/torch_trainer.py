@@ -1,4 +1,5 @@
-"""Module that allows for the training of torch models."""
+"""Module that allows for the training of language models."""
+
 import torch
 import logging
 
@@ -6,13 +7,13 @@ import numpy as np
 from torch import Tensor, nn
 from dataclasses import dataclass
 from torch.optim import Adam
-
+from torch.utils.data import DataLoader, Dataset
 from timm.scheduler.cosine_lr import CosineLRScheduler
 
 
 @dataclass
 class TorchTrainer:
-    """Abstract class for torch trainers.
+    """Torch trainer for large language models.
 
     :param model: the torch model to train.
     :param criterion: the torch loss function.
@@ -47,6 +48,8 @@ class TorchTrainer:
     warmup_t: int = 1
     warmup_lr: float = 1e-5
 
+    # Path to the torch model
+    model_path: str | None = None
 
     def __post_init__(self):
         """Initialize the model and other parameters."""
@@ -72,7 +75,21 @@ class TorchTrainer:
         self.last_val_loss = np.inf
         self.lowest_val_loss = np.inf
 
-    def custom_train(self, x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], **train_args: Any) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    def custom_train(self, x: DataLoader, y: DataLoader):
+        """Train the large language model using torch loaders."""
+
+        # Predict if the models is already trained
+        if self._model_exists():
+            self.logger.info(f"Model exists in {self.model_path}")
+            return self.predict_after_train(x, y)
+
+    def initialize_path(self, config: str):
+        """Create the path of the model using a hydra config."""
+
+
+
+
+    def custom_trains(self, x: npt.NDArray[np.float32], y: npt.NDArray[np.float32], **train_args: Any) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         """Train the model.
 
         :param x: The input to the system.
@@ -84,6 +101,17 @@ class TorchTrainer:
             - fold: Fold number if running cv.
         :return: The input and output of the system.
         """
+        train_indices = train_args.get("train_indices")
+        if train_indices is None:
+            raise ValueError("train_indices not provided")
+        validation_indices = train_args.get("validation_indices")
+        if validation_indices is None:
+            raise ValueError("validation_indices not provided")
+        save_model = train_args.get("save_model", True)
+        self._fold = train_args.get("fold", -1)
+
+        self.save_model_to_disk = save_model
+
         # Create datasets
         train_dataset, validation_dataset = self.create_datasets(
             x,
