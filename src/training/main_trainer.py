@@ -115,17 +115,18 @@ class MainTrainer:
 
         self.logger.info("Running inference on the given dataloader")
         self.model.eval()
-        predictions = []
+        losses = []
 
         with torch.no_grad():
-            for batch in tqdm(loader, unit="batch", disable=False):
-                batch =  batch[0].to(self.device, dtype=torch.float32)
+            for X_batch, y_batch in tqdm(loader, unit="batch", disable=False):
+                X_batch = X_batch.to(self.device, dtype=torch.int64)
+                y_batch = y_batch.to(self.device, dtype=torch.int64)
 
-                batch_pred = self.model(batch).squeeze(1)
-                predictions.extend(batch_pred.cpu().numpy())
+                _, loss = self.model(X_batch, y_batch)
+                losses.append(loss)
 
         self.logger.info("Done predicting!")
-        return predictions
+        return sum(losses) / len(losses)
 
     def _training_loop(self, train_loader: DataLoader, valid_loader: DataLoader):
         """Training loop for the large language model.
@@ -133,8 +134,8 @@ class MainTrainer:
         :param train_loader: Dataloader for the training data
         :param valid_loader: Dataloader for the validation data (can be empty)"""
 
-        self.external_define_metric(self.wrap_log(f"Training Loss"), self.wrap_log("epoch"))
-        self.external_define_metric(self.wrap_log(f"Validation Loss"), self.wrap_log("epoch"))
+        self.external_define_metric(f"Training Loss", "epoch")
+        self.external_define_metric(f"Validation Loss", "epoch")
 
         # Initialize the training and validation losses
         train_losses: list[float] = []
@@ -159,15 +160,19 @@ class MainTrainer:
             if wandb.run:
                 # Log the validation loss
                 wandb.log({
-                    self.wrap_log(f"Validation Loss"): val_losses[-1],
-                    self.wrap_log("epoch"): epoch})
+                    "Validation Loss": val_losses[-1],
+                    "epoch": epoch})
+
+                wandb.log({
+                    "Training Loss": train_losses[-1],
+                    "epoch": epoch})
 
                 # plot the train/val loss against each other
                 plot = wandb.plot.line_series(
                     xs=list(range(epoch + 1)),
                     ys=[train_losses, val_losses],
                     keys=[f"Train", f"Validation"],
-                    title=self.wrap_log(f"Training/Loss"),
+                    title=f"Training/Validation",
                     xname="Epoch")
 
                 wandb.log({'title': plot}, commit=False)
@@ -246,7 +251,8 @@ class MainTrainer:
         """Save the model in the model directory."""
 
         self.logger.info(f"Saving model to {self.model_path}")
-        self.model_path.parent.mkdir(exist_ok=True, parents=True)
+        model_path = Path(self.model_path)
+        model_path.parent.mkdir(exist_ok=True, parents=True)
         torch.save(self.model, self.model_path)
 
     def wrap_log(self, text: str) -> str:
