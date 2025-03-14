@@ -1,0 +1,9 @@
+defaults:
+  - model: gpt_nano
+
+# Path to the training and validation data
+train_path: data/text8/train.parquet
+valid_path: data/text8/validation.parquet
+
+# Reduce the data for development
+development: False # 20000 or False
