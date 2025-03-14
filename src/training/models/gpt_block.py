@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch import Tensor
 
 class GPTBlock(nn.Module):
-    def __init__(self, config: dict):
+    def __init__(self, **config: dict):
         """Initialize the torch layers."""
 
         super().__init__()

@@ -1,20 +1,18 @@
 """Module that manages the GPT-2 torch model."""
 
-import math
-
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from src.training.models.gpt_block import GPTBlock
 
 class GPT(nn.Module):
-    def __init__(self, config: dict):
+    def __init__(self, **config: dict):
         """Initialize the torch layers."""
 
         super().__init__()
 
         # Extract the parameters from the config
-        self.embed: int = config['n_embedding']
+        self.n_embed: int = config['n_embedding']
         self.bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
@@ -24,16 +22,16 @@ class GPT(nn.Module):
         self.n_layer: int = config['n_layer']
 
         # Initialize the embedding layers
-        self.wte = nn.Embedding(self.vocab_size, self.n_embd)
-        self.wpe = nn.Embedding(self.block_size, self.n_embd)
+        self.wte = nn.Embedding(self.vocab_size, self.n_embed)
+        self.wpe = nn.Embedding(self.block_size, self.n_embed)
 
         # Initialize the dropout and layer normalization
         self.drop = nn.Dropout(self.dropout)
-        self.norm = nn.LayerNorm(self.n_embd, bias=self.bias)
+        self.norm = nn.LayerNorm(self.n_embed, bias=self.bias)
 
         # Initialize the GPT-2 blocks and head
-        self.blocks = nn.ModuleList([GPTBlock(config) for _ in range(self.n_layer)])
-        self.lm_head = nn.Linear(self.n_embd, self.vocab_size, bias=False)
+        self.blocks = nn.ModuleList([GPTBlock(**config) for _ in range(self.n_layer)])
+        self.lm_head = nn.Linear(self.n_embed, self.vocab_size, bias=False)
         self.wte.weight = self.lm_head.weight
 
         # Initialize all the weights

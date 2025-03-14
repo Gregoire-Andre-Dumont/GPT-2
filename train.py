@@ -29,10 +29,12 @@ def run_train(cfg: DictConfig) -> None:
 
     logger.info(f"Training size: {len(train)}")
     logger.info(f"Validation size: {len(valid)}")
-    logger.info(f"Sequence length: {1024}")
 
-    ff = hydra.utils.instantiate(cfg.model.bb)
+    # Initialize the torch trainer and model
+    section_separator("Initialize the torch model")
+    trainer = hydra.utils.instantiate(cfg.model.torch_trainer)
 
+    trainer.create_path(cfg)
 
     a = 1
 
