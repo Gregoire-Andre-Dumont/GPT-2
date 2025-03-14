@@ -1,10 +1,13 @@
 """Main script for training the model and will take in the raw data and output a trained model."""
+import wandb
 import logging
 import hydra
 import coloredlogs
 from omegaconf import DictConfig
+from pathlib import Path
 from torch.utils.data import DataLoader
 
+from src.setup.setup_wandb import setup_wandb
 from src.setup.setup_data import encode_data
 from src.setup.setup_seed import set_torch_seed
 from src.utils.separator import section_separator
@@ -24,6 +27,12 @@ def run_train(cfg: DictConfig) -> None:
     coloredlogs.install()
     set_torch_seed()
 
+    # Get output directory
+    output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+
+    if cfg.wandb_enabled:
+        setup_wandb(cfg, output_dir)
+
     # Load and encode train and validation
     section_separator("Load and tokenize the data")
     train = encode_data(cfg.train_path, cfg.development)
@@ -35,7 +44,7 @@ def run_train(cfg: DictConfig) -> None:
     # Initialize the torch trainer and model
     section_separator("Initialize the torch model")
     trainer = hydra.utils.instantiate(cfg.model.torch_trainer)
-    trainer.create_path(cfg)
+    trainer.create_path(cfg.model.torch_trainer)
 
     # Initialize the train and validation datasets
     logger.info("Create the train and validation datasets")
@@ -48,11 +57,11 @@ def run_train(cfg: DictConfig) -> None:
 
     # Train or fine-tune the GPT-2 model
     section_separator("Train or fine-tune the GPT-2 model")
-    trainer.custom_train(train_dataloader, valid_dataloader)
+    valid_loss = trainer.custom_train(train_dataloader, valid_dataloader)
 
-    a = 1
-
-
+    if wandb.run:
+        wandb.log({"Validation Score": valid_loss})
+    wandb.finish()
 
 if __name__ == "__main__":
     run_train()

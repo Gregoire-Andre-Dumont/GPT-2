@@ -25,7 +25,7 @@ class MainDataset(Dataset):
         """Extract the sequence and the target."""
 
         start_index = index * self.block_size
-        idx = start_index + random.randint(0, 1020)
+        idx = start_index + random.randint(0, self.block_size - 1)
         input = self.data[idx: idx + self.block_size]
         target = self.data[idx+1:idx + self.block_size+1]
 
