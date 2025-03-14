@@ -30,7 +30,8 @@ class GPTBlock(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the transformer block."""
 
-        z = x + self.attention(self.norm_1(x))
+        x = self.norm_1(x)
+        z = x + self.attention(x, x, x)[0]
         x = self.fully(self.norm_2(z))
         x = self.project(self.gelu(x))
         return z + self.dropout(x)

@@ -50,7 +50,7 @@ class MainTrainer:
 
         # Initialize the optimizer and scheduler
         self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
-        self.scheduler = CosineLRScheduler(**self.scheduler_param)
+        self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
 
         # Set the torch model to correct device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -198,12 +198,11 @@ class MainTrainer:
         progress = tqdm(loader, unit="batch", desc=desc)
 
         for X_batch, y_batch in progress:
-            X_batch = X_batch.to(self.device, dtype=torch.float32)
-            y_batch = y_batch.to(self.device, dtype=torch.float32)
+            X_batch = X_batch.to(self.device, dtype=torch.int64)
+            y_batch = y_batch.to(self.device, dtype=torch.int64)
 
             # Forward pass of the model
-            y_pred = self.model(X_batch).squeeze(1)
-            loss = self.criterion(y_pred, y_batch)
+            _, loss = self.model(X_batch, y_batch)
 
             # Backward pass of the model
             loss.backward()
@@ -231,12 +230,11 @@ class MainTrainer:
 
         with torch.no_grad():
             for X_batch, y_batch in progress:
-                X_batch = X_batch.to(self.device, dtype=torch.float32)
-                y_batch = y_batch.to(self.device, dtype=torch.float32)
+                X_batch = X_batch.to(self.device, dtype=torch.int64)
+                y_batch = y_batch.to(self.device, dtype=torch.int64)
 
                 # Forward pass of the model
-                y_pred = self.model(X_batch).squeeze(1)
-                loss = self.criterion(y_pred, y_batch)
+                _, loss = self.model(X_batch, y_batch)
                 losses.append(loss.item())
 
                 # Print the progress bar

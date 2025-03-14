@@ -90,7 +90,6 @@ venv.bak/
 .idea
 data/processed
 data/unlabeled_videos
-data/
 tm/
 bash_labeling.sh
 outputs/

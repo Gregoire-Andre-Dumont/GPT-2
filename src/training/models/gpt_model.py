@@ -55,7 +55,7 @@ class GPT(nn.Module):
         batch, length = inputs.size()
 
         # Check whether the sequence size is valid
-        assert length <= self.config.block_size, f"Cannot forward sequence of length {length}"
+        assert length <= self.block_size, f"Cannot forward sequence of length {length}"
         pos = torch.arange(0, length, dtype=torch.long, device=inputs.device)
 
         # Compute the token and position embeddings
@@ -64,11 +64,20 @@ class GPT(nn.Module):
         outputs = self.drop(tok_embeddings + pos_embeddings)
 
         # Perform the transformer blocks
-        for block in self.transformer.h:
+        for block in self.blocks:
             outputs = block(outputs)
 
-        outputs = self.transformer.norm(outputs)
-        return self.lm_head(outputs)
+        x = self.norm(outputs)
+        if targets is not None:
+            # if we are given some desired targets also calculate the loss
+            logits = self.lm_head(x)
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
+        else:
+            # inference-time mini-optimization: only forward the lm_head on the very last position
+            logits = self.lm_head(x[:, [-1], :])  # note: using list [-1] to preserve the time dim
+            loss = None
+
+        return logits, loss
 
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):

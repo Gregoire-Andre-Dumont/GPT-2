@@ -4,11 +4,12 @@ from transformers import GPT2Tokenizer
 import pandas as pd
 import numpy as np
 
-def encode_data(path: str, development: int | bool):
+def encode_data(path: str, development: int | bool, length: int = 1024):
     """Encode the text data using a pre-trained encoder.
 
     :param path: parquet file containing the text.
-    :param development: Reduce the text size for development."""
+    :param development: Reduce the text size for development.
+    :param length: number of tokens in each sample."""
 
     # Load the pre-trained tokenizer from hugging face
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
