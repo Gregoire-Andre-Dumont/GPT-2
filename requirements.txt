@@ -7,3 +7,4 @@ pandas>=2.2.2
 omegaconf==2.3.0
 matplotlib
 transformers
+dataclasses

@@ -43,8 +43,6 @@ def run_train(cfg: DictConfig) -> None:
 
     # Initialize the torch trainer and model
     section_separator("Initialize the torch model")
-    print(cfg.model.torch_trainer)
-    print(cfg)
     trainer = hydra.utils.instantiate(cfg.model.torch_trainer)
     trainer.create_path(cfg.model.torch_trainer)
 
