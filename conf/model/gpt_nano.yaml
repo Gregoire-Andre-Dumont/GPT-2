@@ -3,7 +3,7 @@ defaults:
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
-  epochs: 6
+  epochs: 20
   patience: 5
   batch_size: 12
   learning_rate: 6e-4
