@@ -62,22 +62,11 @@ class MainTrainer:
         self.lowest_val_loss = np.inf
         self.best_model_state_dict: dict[Any, Any] = {}
 
-        # Prefix and postfix for logging to external
-        self.logging_prefix = field(default="", init=True, repr=False, compare=False)
-        self.logging_postfix = field(default="", init=True, repr=False, compare=False)
-
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
-        """Train the large language model.
+        """Train and evaluate the large language model.
 
-        :param train_loader: the train dataloader.
-        :param valid_loader: the validation dataloader."""
-
-        # Check whether the model is trained
-        if self.model_exist() and self.save_model:
-
-            # Load the model and perform inference
-            self._load_model()
-            return self.predict_on_loader(valid_loader)
+        :param train_loader: loader for the training data.
+        :param valid_loader: loader for the validation data."""
 
         # Train the large language model
         self.logger.info(f"Train the model for {self.epochs} epochs")
@@ -92,14 +81,12 @@ class MainTrainer:
 
         # save the model and perform inference on validation
         self._save_model() if self.save_model else None
-        return self.predict_on_loader(valid_loader)
-
 
     def create_path(self, config: dict):
         """Create the model path using the model config."""
         self.model_path = f"tm/{hash(config)}.pt"
 
-    def model_exist(self):
+    def model_exist(self) -> bool:
         """Check if the model is already trained."""
         return Path(self.model_path).exists()
 
