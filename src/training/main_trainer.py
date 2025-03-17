@@ -186,16 +186,16 @@ class MainTrainer:
             X_batch = X_batch.to(self.device, dtype=torch.int64)
             y_batch = y_batch.to(self.device, dtype=torch.int64)
 
-            # Forward pass of the model
+            # Forward and backward pass
             _, loss = self.model(X_batch, y_batch)
+            losses.append(loss.item())
 
-            # Backward pass of the model
             loss.backward()
             self.optimizer.step()
 
             # Print the progress bar
-            losses.append(loss.item())
-            progress_bar.set_postfix(loss=sum(losses) / len(losses))
+            mean_loss = sum(losses) / len(losses)
+            progress_bar.set_postfix(loss=mean_loss)
 
         # Remove the cuda cache
         torch.cuda.empty_cache()
