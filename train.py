@@ -27,8 +27,9 @@ def run_train(cfg: DictConfig) -> None:
     coloredlogs.install()
     set_torch_seed()
 
-    # Get output directory
-    output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+    # Get the output directory from the runtime configuration
+    hydra_config = hydra.core.hydra_config.HydraConfig.get()
+    output_dir = Path(hydra_config.runtime.output_dir)
 
     if cfg.wandb_enabled:
         setup_wandb(cfg, output_dir)
@@ -37,30 +38,43 @@ def run_train(cfg: DictConfig) -> None:
     section_separator("Load and tokenize the data")
     train = encode_data(cfg.train_path, cfg.development)
     valid = encode_data(cfg.valid_path, cfg.development)
+    test = encode_data(cfg.test_path, cfg.development)
 
     logger.info(f"Training size: {len(train)}")
     logger.info(f"Validation size: {len(valid)}")
+    logger.info(f"Test size: {len(test)}")
 
-    # Initialize the torch trainer and model
-    section_separator("Initialize the torch model")
+    # Initialize the torch model and trainer
+    section_separator("Train and evaluate the model")
     trainer = hydra.utils.instantiate(cfg.model.torch_trainer)
     trainer.create_path(cfg.model.torch_trainer)
 
-    # Initialize the train and validation datasets
-    logger.info("Create the train and validation datasets")
+    logger.info('Create train and validation dataloader')
     train_dataset = MainDataset(data=train, data_augment=True)
     valid_dataset = MainDataset(data=valid, data_augment=False)
+    test_dataset = MainDataset(data=test, data_augment=False)
 
-    logger.info("Create the train and validation dataloaders")
-    train_dataloader = DataLoader(train_dataset, batch_size=trainer.batch_size, shuffle=True)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=trainer.batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=trainer.batch_size, shuffle=True)
+    valid_loader = DataLoader(valid_dataset, batch_size=trainer.batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=trainer.batch_size, shuffle=False)
 
-    # Train or fine-tune the GPT-2 model
-    section_separator("Train or fine-tune the GPT-2 model")
-    valid_loss = trainer.custom_train(train_dataloader, valid_dataloader)
+    # Check whether the model is already trained
+    if trainer.model_exist():
+        trainer.custom_train(train_loader, valid_loader)
+    else:
+        # Otherwise, load the saved model
+        trainer._load_model()
+
+    logger.info('Predict on the validation and test data.')
+    valid_loss = trainer.predict_on_valid(valid_loader)
+    test_loss = trainer.predict_on_test(test_loader)
+
+    logger.info(f"Validation loss: {valid_loss}")
+    logger.info(f"Test loss: {test_loss}")
 
     if wandb.run:
-        wandb.log({"Validation Score": valid_loss})
+        wandb.log({"Validation loss": valid_loss,
+                   "Test loss": test_loss})
     wandb.finish()
 
 if __name__ == "__main__":
