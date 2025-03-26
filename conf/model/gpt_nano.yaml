@@ -1,6 +1,9 @@
 defaults:
   - _self_
 
+dataloader:
+  _target_: src.
+
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
   epochs: 6

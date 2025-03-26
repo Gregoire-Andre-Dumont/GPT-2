@@ -11,7 +11,7 @@ from src.setup.setup_wandb import setup_wandb
 from src.setup.setup_data import encode_data
 from src.setup.setup_seed import set_torch_seed
 from src.utils.separator import section_separator
-from src.training.main_dataset import MainDataset
+from src.training.datasets.main_dataset import MainDataset
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")

@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 from torch import Tensor, nn
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from torch.optim import Adam
 from pathlib import Path
 from tqdm import tqdm
