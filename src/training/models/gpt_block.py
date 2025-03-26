@@ -2,6 +2,8 @@
 
 import torch.nn as nn
 from torch import Tensor
+from src.training.models.grouped_query import GroupedQuery
+from src.training.models.causal_attention import CausalAttention
 
 class GPTBlock(nn.Module):
     def __init__(self, **config: dict):
@@ -14,11 +16,16 @@ class GPTBlock(nn.Module):
         self.bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
+        self.grouped_query: bool = config['grouped']
 
         # Initialize layer normalization and attention layer
         self.norm_1 = nn.LayerNorm(self.embed, bias=self.bias)
         self.norm_2 = nn.LayerNorm(self.embed, bias=self.bias)
-        self.attention = nn.MultiheadAttention(self.embed, self.n_head, self.dropout)
+
+        if self.grouped_query:
+            self.attention = GroupedQuery(**config)
+        else:
+            self.attention = CausalAttention(**config)
 
         # Initialize the layers in the feedforward network
         self.fully = nn.Linear(self.embed, 4 * self.embed, bias=self.bias)

@@ -1,6 +1,5 @@
 """Module that manages the grouped query attention module"""
 
-import torchtune
 import torch
 import torch.nn as nn
 from rotary_embedding_torch import RotaryEmbedding
