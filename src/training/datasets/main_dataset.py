@@ -24,9 +24,6 @@ class MainDataset(Dataset):
     block_size : int | None = None
 
 
-
-
-
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
