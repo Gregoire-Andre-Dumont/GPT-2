@@ -1,6 +1,5 @@
 """Main torch dataset for pre-training the GPT-2 model."""
 
-
 from torch import Tensor
 import random
 from dataclasses import dataclass
@@ -8,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from transformers import GPT2Tokenizer
 from torch.utils.data import Dataset
+from transformers import BertForMaskedLM, BertTokenizer
 
 @dataclass
 class MainDataset(Dataset):
@@ -23,32 +23,22 @@ class MainDataset(Dataset):
     p_bert: float | None = None
     block_size : int | None = None
 
-
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        self.augment = augment
-        self.augmented = self.create_augmented(text) if augment else None
+        self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased")
+        self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
+
+        self.text = self.augment_data(text) if augment else text
+        self.text_data = self.tokenizer(self.text)
+
+
+    def augment_data(self, text: str) -> str:
+        """Augment the text using masked language modeling."""
 
 
 
-
-    def mask_random_words(text, mask_prob=0.15):
-        words = text.split()  # Split by whitespace to get whole words
-        masked_text = []
-        masked_indices = []
-
-        for i, word in enumerate(words):
-            # Apply masking probability to whole words
-            if random.random() < mask_prob:
-                subwords = bert_tokenizer.tokenize(word)  # Ensure correct tokenization
-                masked_text.extend(["[MASK]"] * len(subwords))  # Mask all subword pieces
-                masked_indices.append(i)  # Keep track of masked word index
-            else:
-                masked_text.extend(bert_tokenizer.tokenize(word))  # Keep word as is
-
-        return " ".join(masked_text), masked_indices, words
 
 
 

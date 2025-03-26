@@ -1,3 +1,5 @@
+"""Module that manages the torch trainer for training LLMs."""
+
 import gc
 import copy
 import wandb
