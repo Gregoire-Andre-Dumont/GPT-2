@@ -42,6 +42,7 @@ class MainDataset(Dataset):
 
         # Encode and save the text
         self.text_data = text
+        self.augment = augment
         self.tokenized_data = self.tokenizer.encode(text, add_special_tokens=True)
 
     def data_augment(self, text: str) -> str:

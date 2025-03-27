@@ -28,7 +28,6 @@ class MainTrainer:
     :param save_model: whether to save the model on the disk.
     :param epochs: number of epochs for training.
     :param patience: stopping training after no improvement.
-    :param batch_size: batch size for training.
     :param learning_rate: learning rate for ADAM.
     :param scheduler_param: parameters of cosine scheduler."""
 
@@ -39,7 +38,6 @@ class MainTrainer:
 
     epochs: int = 20
     patience: int = 5
-    batch_size: int = 16
     learning_rate: float = 6e-4
     scheduler_param: dict | None = None
 
