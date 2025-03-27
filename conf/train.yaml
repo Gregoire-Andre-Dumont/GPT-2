@@ -7,7 +7,7 @@ valid_path: data/text8/validation.parquet
 test_path: data/text8/test.parquet
 
 # Reduce the data for development
-development: 10000 # 20000 or False
+development: False # 20000 or False
 
 # Weight and biases
 wandb_enabled: True

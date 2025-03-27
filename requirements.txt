@@ -10,3 +10,5 @@ transformers
 rotary-embedding-torch
 torchtune
 torchao
+joblib
+timm
