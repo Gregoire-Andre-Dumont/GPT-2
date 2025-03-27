@@ -4,9 +4,10 @@ defaults:
 # Path to the training and validation data
 train_path: data/text8/train.parquet
 valid_path: data/text8/validation.parquet
+test_path: data/text8/test.parquet
 
 # Reduce the data for development
-development: 20000 # 20000 or False
+development: 10000 # 20000 or False
 
 # Weight and biases
 wandb_enabled: True

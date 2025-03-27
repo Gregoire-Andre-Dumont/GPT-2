@@ -28,7 +28,6 @@ class MainTrainer:
     :param save_model: whether to save the model on the disk.
     :param epochs: number of epochs for training.
     :param patience: stopping training after no improvement.
-    :param batch_size: batch size for training.
     :param learning_rate: learning rate for ADAM.
     :param scheduler_param: parameters of cosine scheduler."""
 
@@ -39,7 +38,6 @@ class MainTrainer:
 
     epochs: int = 20
     patience: int = 5
-    batch_size: int = 16
     learning_rate: float = 6e-4
     scheduler_param: dict | None = None
 
@@ -96,14 +94,10 @@ class MainTrainer:
         model = torch.load(self.model_path)
         self.model.load_state_dict(model.state_dict())
 
-    def predict_score(self, loader: DataLoader, split: str):
-        """Predict the model performance on the given loader.
+    def predict_score(self, loader: DataLoader):
+        """Predict the model performance on the given loader."""
 
-        :param loader: Dataloader for validation or test.
-        :param split: validation or test split."""
-
-        self.logger.info(f"Running inference on {split}")
-        self.model.eval()
+        self.logger.info(f"Running inference on the test loader")
         losses = []
 
         with torch.no_grad():
