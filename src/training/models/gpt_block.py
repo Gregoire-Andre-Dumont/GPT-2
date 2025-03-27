@@ -12,15 +12,15 @@ class GPTBlock(nn.Module):
         super().__init__()
 
         # Extract the parameters from the config
-        self.embed: int = config['n_embedding']
+        self.n_embed: int = config['n_embedding']
         self.bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
         self.grouped_query: bool = config['grouped']
 
         # Initialize layer normalization and attention layer
-        self.norm_1 = nn.LayerNorm(self.embed, bias=self.bias)
-        self.norm_2 = nn.LayerNorm(self.embed, bias=self.bias)
+        self.norm_1 = nn.LayerNorm(self.n_embed, bias=self.bias)
+        self.norm_2 = nn.LayerNorm(self.n_embed, bias=self.bias)
 
         if self.grouped_query:
             self.attention = GroupedQuery(**config)
@@ -28,8 +28,8 @@ class GPTBlock(nn.Module):
             self.attention = CausalAttention(**config)
 
         # Initialize the layers in the feedforward network
-        self.fully = nn.Linear(self.embed, 4 * self.embed, bias=self.bias)
-        self.project = nn.Linear(4 * self.embed, self.embed, bias=self.bias)
+        self.fully = nn.Linear(self.n_embed, 4 * self.n_embed, bias=self.bias)
+        self.project = nn.Linear(4 * self.n_embed, self.n_embed, bias=self.bias)
 
         self.dropout = nn.Dropout(self.dropout)
         self.gelu = nn.GELU()
@@ -38,7 +38,7 @@ class GPTBlock(nn.Module):
         """Forward pass of the transformer block."""
 
         x = self.norm_1(x)
-        z = x + self.attention(x, x, x)[0]
+        z = x + self.attention(x)[0]
         x = self.fully(self.norm_2(z))
         x = self.project(self.gelu(x))
         return z + self.dropout(x)

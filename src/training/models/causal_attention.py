@@ -15,7 +15,7 @@ class CausalAttention(nn.Module):
         super().__init__()
 
         # Extract the parameters from the config
-        self.embed: int = config['n_embedding']
+        self.n_embed: int = config['n_embedding']
         self.bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']

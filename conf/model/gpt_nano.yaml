@@ -3,20 +3,19 @@ defaults:
 
 dataloader:
   _target_: torch.utils.data.DataLoader
-  batch_size: 12
+  batch_size: 3
   num_workers: 5
   prefetch_factor: 2
   dataset:
     _target_: src.training.datasets.main_dataset.MainDataset
     p_bert: 0.05
-    p_augment: 0.1
+    p_augment: 0.001
     block_size: 512
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
-  epochs: 6
+  epochs: 2
   patience: 5
-  batch_size: 12
   learning_rate: 6e-4
   save_model: False
   scheduler_param:
@@ -25,9 +24,9 @@ torch_trainer:
     warmup_lr_init: 1e-5
   model:
     _target_: src.training.models.gpt_model.GPT
-    block_size: 512
     vocab_size: 50304
     n_embedding: 512
+    block_size: 512
     n_layer: 4
     n_head: 8
     dropout: 0.0

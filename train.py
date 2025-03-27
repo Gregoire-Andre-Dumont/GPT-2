@@ -1,17 +1,23 @@
 """Main script for training the model and will take in the raw data and output a trained model."""
 import wandb
 import logging
+import warnings
+import os
 import hydra
 import coloredlogs
 from omegaconf import DictConfig
 from pathlib import Path
-from torch.utils.data import DataLoader
 
 from src.setup.setup_wandb import setup_wandb
-from src.setup.setup_data import encode_data
+from src.setup.setup_data import setup_pre_training
+from copy import deepcopy
 from src.setup.setup_seed import set_torch_seed
 from src.utils.separator import section_separator
-from src.training.datasets.main_dataset import MainDataset
+
+warnings.filterwarnings("ignore", category=UserWarning)
+# Makes hydra give full error messages
+os.environ["HYDRA_FULL_ERROR"] = "1"
+
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
@@ -33,34 +39,32 @@ def run_train(cfg: DictConfig) -> None:
     if cfg.wandb_enabled:
         setup_wandb(cfg, output_dir)
 
-    # Load and encode train and validation
-    section_separator("Load and tokenize the data")
-    train = encode_data(cfg.train_path, cfg.development)
-    valid = encode_data(cfg.valid_path, cfg.development)
+    # Load and initialize the dataloaders
+    section_separator("Load and initialize the torch dataloaders")
+    loader = hydra.utils.instantiate(cfg.model.dataloader)
 
-    logger.info(f"Training size: {len(train)}")
-    logger.info(f"Validation size: {len(valid)}")
+    train_loader = setup_pre_training(cfg, cfg.train_path, True, deepcopy(loader))
+    valid_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
+    test_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
+
+    logger.info(f"Training size: {len(train_loader)}")
+    logger.info(f"Validation size: {len(valid_loader)}")
+    logger.info(f"Test size: {len(test_loader)}")
 
     # Initialize the torch trainer and model
     section_separator("Initialize the torch model")
     trainer = hydra.utils.instantiate(cfg.model.torch_trainer)
     trainer.create_path(cfg.model.torch_trainer)
 
-    # Initialize the train and validation datasets
-    logger.info("Create the train and validation datasets")
-    train_dataset = MainDataset(data=train, data_augment=True)
-    valid_dataset = MainDataset(data=valid, data_augment=False)
-
-    logger.info("Create the train and validation dataloaders")
-    train_dataloader = DataLoader(train_dataset, batch_size=trainer.batch_size, shuffle=True)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=trainer.batch_size, shuffle=False)
-
     # Train or fine-tune the GPT-2 model
-    section_separator("Train or fine-tune the GPT-2 model")
-    valid_loss = trainer.custom_train(train_dataloader, valid_dataloader)
+    section_separator("Train and validate the GPT-2 model")
+    valid_loss = trainer.custom_train(train_loader, valid_loader)
+    test_loss = trainer.predict_score(test_loader)
+
 
     if wandb.run:
         wandb.log({"Validation Score": valid_loss})
+        wandb.log({"Test Score": test_loss})
     wandb.finish()
 
 if __name__ == "__main__":

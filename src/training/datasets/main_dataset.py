@@ -33,17 +33,18 @@ class MainDataset(Dataset):
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
+        self.text_data = text
+        self.augment = augment
+
         # Load the necessary tokenizers and models
         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
         self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-
-        self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased")
-        self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
-
-        # Encode and save the text
-        self.text_data = text
-        self.augment = augment
         self.tokenized_data = self.tokenizer.encode(text, add_special_tokens=True)
+
+        # Check whether we have to load BERT
+        if augment:
+            self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased")
+            self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
 
     def data_augment(self, text: str) -> str:
         """Data augmentation with mask language modeling."""
@@ -106,11 +107,11 @@ class MainDataset(Dataset):
 
             # Augment the input with BERT
             augmented = self.data_augment(sequence[:512])
-            augmented = self.tokenizer.encode(sequence, truncation=True, max_length=512)
+            args = {"truncation": True, "max_length": self.block_size}
+            augmented = self.tokenizer.encode(sequence, **args)
 
             # Extract the input and output
             input = self.pad_sequence(augmented[:-1])
             target = self.pad_sequence(augmented[1:])
-
 
         return Tensor(input), Tensor(target)

@@ -15,7 +15,7 @@ class GroupedQuery(nn.Module):
         super().__init__()
 
         # Extract the parameters from the config
-        self.embed: int = config['n_embedding']
+        self.n_embd: int = config['n_embedding']
         self.bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
@@ -23,7 +23,7 @@ class GroupedQuery(nn.Module):
         self.block_size: int = config['block_size']
 
         self.kv_factor = self.n_head // self.kv_heads
-        self.kv_factor = self.n_embed // self.kv_factor
+        self.kv_factor = self.n_embd // self.kv_factor
 
         # Initialize linear projections
         self.c_proj = nn.Linear(self.n_embd, self.n_embd, bias=self.bias)
@@ -37,7 +37,7 @@ class GroupedQuery(nn.Module):
         self.query_attention = MultiHeadAttention(
             embed_dim=self.n_head,
             num_heads=self.n_head,
-            num_kv_heads=self.kv_head,
+            num_kv_heads=self.kv_heads,
             head_dim=self.n_embd // self.n_head,
             q_proj=self.q_proj,
             k_proj=self.k_proj,
