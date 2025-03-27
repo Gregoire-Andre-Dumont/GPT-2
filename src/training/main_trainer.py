@@ -94,14 +94,10 @@ class MainTrainer:
         model = torch.load(self.model_path)
         self.model.load_state_dict(model.state_dict())
 
-    def predict_score(self, loader: DataLoader, split: str):
-        """Predict the model performance on the given loader.
+    def predict_score(self, loader: DataLoader):
+        """Predict the model performance on the given loader."""
 
-        :param loader: Dataloader for validation or test.
-        :param split: validation or test split."""
-
-        self.logger.info(f"Running inference on {split}")
-        self.model.eval()
+        self.logger.info(f"Running inference on the test loader")
         losses = []
 
         with torch.no_grad():
