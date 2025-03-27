@@ -1,3 +1,5 @@
+"""Module that manages the torch trainer for training LLMs."""
+
 import gc
 import copy
 import wandb
@@ -62,22 +64,11 @@ class MainTrainer:
         self.lowest_val_loss = np.inf
         self.best_model_state_dict: dict[Any, Any] = {}
 
-        # Prefix and postfix for logging to external
-        self.logging_prefix = field(default="", init=True, repr=False, compare=False)
-        self.logging_postfix = field(default="", init=True, repr=False, compare=False)
-
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
-        """Train the large language model.
+        """Train and evaluate the large language model.
 
-        :param train_loader: the train dataloader.
-        :param valid_loader: the validation dataloader."""
-
-        # Check whether the model is trained
-        if self.model_exist() and self.save_model:
-
-            # Load the model and perform inference
-            self._load_model()
-            return self.predict_on_loader(valid_loader)
+        :param train_loader: loader for the training data.
+        :param valid_loader: loader for the validation data."""
 
         # Train the large language model
         self.logger.info(f"Train the model for {self.epochs} epochs")
@@ -90,18 +81,13 @@ class MainTrainer:
             self.logger.info(f"model with best validation loss {self.lowest_val_loss}")
             self.model.load_state_dict(self.best_model_state_dict)
 
-        # save the model and perform inference on validation
+        # save the model if necessary
         self._save_model() if self.save_model else None
-        return self.predict_on_loader(valid_loader)
-
 
     def create_path(self, config: dict):
-        """Create the model path using the model config."""
-        self.model_path = f"tm/{hash(config)}.pt"
+        """Create the model path using the config hash."""
 
-    def model_exist(self):
-        """Check if the model is already trained."""
-        return Path(self.model_path).exists()
+        self.model_path = Path(f"tm/{hash(config)}.pt")
 
     def _load_model(self) -> bool:
         """Load the model from the model directory tm."""
@@ -110,10 +96,13 @@ class MainTrainer:
         model = torch.load(self.model_path)
         self.model.load_state_dict(model.state_dict())
 
-    def predict_on_loader(self, loader: DataLoader):
-        """Perform inference on the given loader."""
+    def predict_score(self, loader: DataLoader, split: str):
+        """Predict the model performance on the given loader.
 
-        self.logger.info("Running inference on the given dataloader")
+        :param loader: Dataloader for validation or test.
+        :param split: validation or test split."""
+
+        self.logger.info(f"Running inference on {split}")
         self.model.eval()
         losses = []
 
@@ -123,7 +112,7 @@ class MainTrainer:
                 y_batch = y_batch.to(self.device, dtype=torch.int64)
 
                 _, loss = self.model(X_batch, y_batch)
-                losses.append(loss)
+                losses.append(loss.item())
 
         self.logger.info("Done predicting!")
         return sum(losses) / len(losses)
@@ -146,26 +135,19 @@ class MainTrainer:
             self.scheduler.step(epoch=0)
 
         for epoch in range(self.epochs):
-            # Train using the train loader
+            # Compute the training loss
             train_loss = self.train_one_epoch(train_loader, epoch)
             train_losses.append(train_loss)
-            self.logger.debug(f"Epoch {epoch} Train Loss: {train_loss}")
 
             # Compute the validation loss
-            self.last_val_loss = self.val_one_epoch(valid_loader, epoch=epoch)
-            self.logger.debug(f"Epoch {epoch} Valid Loss: {self.last_val_loss}")
+            self.last_val_loss = self.val_one_epoch(valid_loader, epoch)
             val_losses.append(self.last_val_loss)
 
             # Check whether wandb is initialized
             if wandb.run:
-                # Log the validation loss
-                wandb.log({
-                    "Validation Loss": val_losses[-1],
-                    "epoch": epoch})
-
-                wandb.log({
-                    "Training Loss": train_losses[-1],
-                    "epoch": epoch})
+                # Log the training and validation loss to wandb
+                wandb.log({"Validation Loss": val_losses[-1], "epoch": epoch})
+                wandb.log({"Training Loss": train_loss, "epoch": epoch})
 
                 # plot the train/val loss against each other
                 plot = wandb.plot.line_series(
@@ -189,7 +171,7 @@ class MainTrainer:
                     break
 
     def train_one_epoch(self, loader: DataLoader, epoch: int) -> float:
-        """Train the language model for one epoch.
+        """Train the model for one epoch and compute its loss.
 
         :param loader: Dataloader for the training data.
         :param epoch: Current epoch number."""
@@ -200,22 +182,22 @@ class MainTrainer:
         # Progress bar for training
         learning_rate = self.optimizer.param_groups[0]['lr']
         desc = f"Epoch {epoch} Train ({learning_rate:0.8f})"
-        progress = tqdm(loader, unit="batch", desc=desc)
+        progress_bar = tqdm(loader, unit="batch", desc=desc)
 
-        for X_batch, y_batch in progress:
+        for X_batch, y_batch in progress_bar:
             X_batch = X_batch.to(self.device, dtype=torch.int64)
             y_batch = y_batch.to(self.device, dtype=torch.int64)
 
-            # Forward pass of the model
+            # Forward and backward pass
             _, loss = self.model(X_batch, y_batch)
+            losses.append(loss.item())
 
-            # Backward pass of the model
             loss.backward()
             self.optimizer.step()
 
             # Print the progress bar
-            losses.append(loss.item())
-            progress.set_postfix(loss=sum(losses) / len(losses))
+            mean_loss = sum(losses) / len(losses)
+            progress_bar.set_postfix(loss=mean_loss)
 
         # Remove the cuda cache
         torch.cuda.empty_cache()
@@ -251,19 +233,15 @@ class MainTrainer:
         """Save the model in the model directory."""
 
         self.logger.info(f"Saving model to {self.model_path}")
-        model_path = Path(self.model_path)
-        model_path.parent.mkdir(exist_ok=True, parents=True)
+        Path(self.model_path).parent.mkdir(exist_ok=True, parents=True)
         torch.save(self.model, self.model_path)
 
-    def wrap_log(self, text: str) -> str:
-        """Add logging prefix and postfix to the message."""
-        return f"{self.logging_prefix}{text}{self.logging_postfix}"
 
     def external_define_metric(self, metric: str, metric_type: str) -> None:
         """Define a metric in an external service.
 
         :param metric: The metric to define
-        :param metric_type: The type of the metric
-        """
+        :param metric_type: The type of the metric"""
+
         if wandb.run:
             wandb.define_metric(metric, step_metric=metric_type)

@@ -1,25 +1,22 @@
-"""Module that encodes and decodes the text using Byte-Pair."""
+"""Module that creates the dataloaders for pre-training, summarization, and question answering."""
 
 from transformers import GPT2Tokenizer
 import pandas as pd
-import numpy as np
+from torch.utils.data import DataLoader
 
-def encode_data(path: str, development: int | bool, length: int = 1024):
-    """Encode the text data using a pre-trained encoder.
+def setup_pre_training(path: str, augment: bool, loader: DataLoader):
+    """Create the dataloader for pre-training the GPT2 model.
 
     :param path: parquet file containing the text.
-    :param development: Reduce the text size for development.
-    :param length: number of tokens in each sample."""
+    :param augment: whether to use data augmentation or not.
+    :param loader: dataloader without the text."""
+
+    # Extract the text from the dataframe
+    data = pd.read_parquet(path)['text'][0]
 
     # Load the pre-trained tokenizer from hugging face
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
-    # Load and reduce the text data if necessary
-    data = pd.read_parquet(path)['text'][0]
-    data = data[:development] if development else data
-
-    # Encode the text data using the tokenizer
-    data = tokenizer(data, return_tensors='np')
-    return np.squeeze(data.input_ids)
-
+    # Initialize the dataloader with the text data
+    return loader.dataset.initialize(data, augment, tokenizer)
 

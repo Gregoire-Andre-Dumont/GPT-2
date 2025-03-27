@@ -20,7 +20,7 @@ def setup_wandb(cfg: DictConfig, output_dir: Path) -> Any:
     config = OmegaConf.to_container(cfg, resolve=True)
 
     run = wandb.init(
-        config=replace_list_with_dict(config),
+        config=config,
         project="GPT-2",
         entity="gregoire-andre-c-dumont ",
         job_type="train",
@@ -44,18 +44,3 @@ def setup_wandb(cfg: DictConfig, output_dir: Path) -> Any:
         wandb.log_artifact(artifact)
         logger.info("Done initializing Weights & Biases")
     return run
-
-
-def replace_list_with_dict(o: object) -> object:
-    """Recursively replace lists with integer index dicts.
-
-    This is necessary for wandb to properly show any parameters in the config that are contained in a list.
-
-    :param o: Initially the dict, or any object recursively inside it.
-    :return: Integer index dict."""
-    if isinstance(o, dict):
-        for k, v in o.items():
-            o[k] = replace_list_with_dict(v)
-    elif isinstance(o, list):
-        o = {i: replace_list_with_dict(v) for i, v in enumerate(o)}
-    return o
