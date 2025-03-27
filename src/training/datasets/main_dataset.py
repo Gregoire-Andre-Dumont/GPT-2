@@ -1,5 +1,6 @@
 """Main torch dataset for pre-training the GPT-2 model."""
 
+import warnings
 import torch
 from torch import Tensor
 import random
@@ -10,7 +11,8 @@ from torch.utils.data import Dataset
 from transformers import BertForMaskedLM, BertTokenizer
 from tqdm import tqdm
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Suppress specific warning
+warnings.filterwarnings("ignore", message=".*indexing errors.*")
 
 @dataclass
 class MainDataset(Dataset):
@@ -31,18 +33,21 @@ class MainDataset(Dataset):
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
-        self.text_data = text
-
         # Load the necessary tokenizers and models
         self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+
         self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased")
         self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
+
+        # Encode and save the text
+        self.text_data = text
+        self.tokenized_data = self.tokenizer.encode(text, add_special_tokens=True)
 
     def data_augment(self, text: str) -> str:
         """Data augmentation with mask language modeling."""
 
-        # Extract the subwords tokens from the text
-        tokenized_text = np.array(self.bert_tokenizer.tokenize(text))
+        tokenized_text = np.array(text)
 
         # Randomly mask tokens in the text
         mask = np.random.rand(len(tokenized_text)) < self.p_bert
@@ -70,19 +75,41 @@ class MainDataset(Dataset):
         # Convert back to text
         return self.bert_tokenizer.convert_tokens_to_string(augmented_tokens)
 
+    def pad_sequence(self, sequence: list[int]):
+        """Pad the token sequence to the block size."""
+
+        token_id = self.tokenizer.pad_token_id
+        padding_size = self.block_size - len(sequence)
+        return sequence + [token_id] * padding_size
+
     def __len__(self) -> int:
         """Return the length of the dataset."""
 
-        return len(self.text_data) // self.block_size - 1
+        return len(self.tokenized_data) // self.block_size - 1
 
     def __getitem__(self, index: int) -> tuple:
         """Extract the sequence and the target."""
 
-
-
+        # Randomly extract a section of the text
         start_index = index * self.block_size
         idx = start_index + random.randint(0, self.block_size - 1)
-        input = self.data[idx: idx + self.block_size]
-        target = self.data[idx+1:idx + self.block_size+1]
+
+        # Extract the input and target sequences
+        input = self.tokenized_data[idx: idx + self.block_size]
+        target = self.tokenized_data[idx + 1:idx + self.block_size + 1]
+
+        # Check whether we have to perform augmentation
+        if random.random() < self.p_augment and self.augment:
+            sequence = self.tokenizer.decode(input)
+            sequence = self.bert_tokenizer.tokenize(sequence)
+
+            # Augment the input with BERT
+            augmented = self.data_augment(sequence[:512])
+            augmented = self.tokenizer.encode(sequence, truncation=True, max_length=512)
+
+            # Extract the input and output
+            input = self.pad_sequence(augmented[:-1])
+            target = self.pad_sequence(augmented[1:])
+
 
         return Tensor(input), Tensor(target)
