@@ -3,7 +3,7 @@ defaults:
 
 dataloader:
   _target_: torch.utils.data.DataLoader
-  batch_size: 3
+  batch_size: 10
   num_workers: 5
   prefetch_factor: 2
   dataset:
@@ -14,7 +14,7 @@ dataloader:
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
-  epochs: 2
+  epochs: 20
   patience: 5
   learning_rate: 6e-4
   save_model: False

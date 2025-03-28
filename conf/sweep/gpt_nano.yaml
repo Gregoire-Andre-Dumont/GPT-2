@@ -1,0 +1,49 @@
+command:
+  - ${venv}
+  - python
+  - ${program}
+  - ${args}
+method: bayes
+metric:
+  goal: minimize
+  name: Validation score
+name: Pre-train GPT-2
+parameters:
+  model.dataloader.batch_size:
+    distribution: int_uniform
+    max: 20
+    min: 5
+  model.dataloader.dataset.p_bert:
+    distribution: uniform
+    max: 0.25
+    min: 0.01
+  model.torch_trainer.epochs:
+    distribution: int_uniform
+    max: 25
+    min: 5
+  model.torch_trainer.learning_rate:
+    distribution: log_uniform_values
+    max: 0.01
+    min: 1e-06
+  model.torch_trainer.model.grouped:
+    values:
+      - true
+      - false
+  model.torch_trainer.patience:
+    distribution: int_uniform
+    max: 10
+    min: 5
+  model.torch_trainer.scheduler_param.t_initial:
+    distribution: int_uniform
+    max: 100
+    min: 10
+  model.torch_trainer.scheduler_param.warmup_lr_init:
+    distribution: log_uniform_values
+    max: 1e-05
+    min: 1e-09
+  model.torch_trainer.scheduler_param.warmup_t:
+    distribution: int_uniform
+    max: 5
+    min: 1
+program: train.py
+project: GPT-2

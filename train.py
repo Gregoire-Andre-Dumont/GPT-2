@@ -3,7 +3,10 @@ import wandb
 import logging
 import warnings
 import os
+import sys
+print(sys.prefix)
 import hydra
+
 import coloredlogs
 from omegaconf import DictConfig
 from pathlib import Path
