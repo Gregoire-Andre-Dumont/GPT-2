@@ -14,7 +14,7 @@ dataloader:
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
-  epochs: 2
+  epochs: 20
   patience: 5
   learning_rate: 6e-4
   save_model: False
