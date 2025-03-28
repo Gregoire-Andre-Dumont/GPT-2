@@ -48,7 +48,7 @@ def run_train(cfg: DictConfig) -> None:
 
     train_loader = setup_pre_training(cfg, cfg.train_path, True, deepcopy(loader))
     valid_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
-    test_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
+    test_loader = setup_pre_training(cfg, cfg.test_path, False, deepcopy(loader))
 
     logger.info(f"Training size: {len(train_loader)}")
     logger.info(f"Validation size: {len(valid_loader)}")
