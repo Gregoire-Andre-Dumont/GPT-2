@@ -10,6 +10,7 @@ from transformers import GPT2Tokenizer
 from torch.utils.data import Dataset
 from transformers import BertForMaskedLM, BertTokenizer
 from tqdm import tqdm
+torch.multiprocessing.set_start_method('spawn')
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message=".*indexing errors.*")
