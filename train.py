@@ -4,7 +4,6 @@ import logging
 import warnings
 import os
 import sys
-import multiprocessing
 import hydra
 
 import coloredlogs
@@ -70,5 +69,4 @@ def run_train(cfg: DictConfig) -> None:
     wandb.finish()
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn", force=True)
     run_train()
