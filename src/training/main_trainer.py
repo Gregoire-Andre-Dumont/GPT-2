@@ -62,6 +62,11 @@ class MainTrainer:
         self.lowest_val_loss = np.inf
         self.best_model_state_dict: dict[Any, Any] = {}
 
+        # Mixed precision training
+        self.logger.info("Using mixed precision training.")
+        self.scaler = torch.GradScaler(device=self.device.type)
+        torch.set_float32_matmul_precision("high")
+
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
         """Train and evaluate the large language model.
 
@@ -182,14 +187,16 @@ class MainTrainer:
             X_batch = X_batch.to(self.device, dtype=torch.int64)
             y_batch = y_batch.to(self.device, dtype=torch.int64)
 
-            # Forward and backward pass
-            _, loss = self.model(X_batch, y_batch)
-            losses.append(loss.item())
+            with torch.autocast(self.device.type):
+                # Forward and backward pass
+                _, loss = self.model(X_batch, y_batch)
 
-            loss.backward()
-            self.optimizer.step()
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
 
             # Print the progress bar
+            losses.append(loss.item())
             mean_loss = sum(losses) / len(losses)
             progress_bar.set_postfix(loss=mean_loss)
 

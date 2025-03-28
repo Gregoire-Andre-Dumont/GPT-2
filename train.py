@@ -4,7 +4,6 @@ import logging
 import warnings
 import os
 import sys
-print(sys.prefix)
 import hydra
 
 import coloredlogs
@@ -20,7 +19,6 @@ from src.utils.separator import section_separator
 warnings.filterwarnings("ignore", category=UserWarning)
 # Makes hydra give full error messages
 os.environ["HYDRA_FULL_ERROR"] = "1"
-
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
