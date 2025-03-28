@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message=".*indexing errors.*")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 @dataclass
 class MainDataset(Dataset):
@@ -43,7 +44,7 @@ class MainDataset(Dataset):
 
         # Check whether we have to load BERT
         if augment:
-            self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased")
+            self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased").to(device)
             self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
 
     def data_augment(self, text: str) -> str:
@@ -58,7 +59,7 @@ class MainDataset(Dataset):
 
         # Convert to BERT input format
         indexed_tokens = self.bert_tokenizer.convert_tokens_to_ids(masked_text)
-        tokens_tensor = torch.tensor([indexed_tokens])
+        tokens_tensor = torch.tensor([indexed_tokens]).to(device)
 
         # Predict masked tokens
         with torch.no_grad():
