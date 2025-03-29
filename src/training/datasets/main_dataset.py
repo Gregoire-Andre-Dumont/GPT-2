@@ -35,10 +35,13 @@ class MainDataset(Dataset):
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
-        # Load the necessary tokenizers and models
-        self.tokenizer = tiktoken.get_encoding('gpt2')
+        self.text_data = text
         self.augment = augment
-        self.tokenized_data = self.tokenizer.encode(text)
+
+        # Load the necessary tokenizers and models
+        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        self.tokenized_data = self.tokenizer.encode(text, add_special_tokens=True)
 
 
     def process_data(self, text):
