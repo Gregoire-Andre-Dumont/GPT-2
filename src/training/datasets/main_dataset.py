@@ -89,16 +89,13 @@ class MainDataset(Dataset):
     def __len__(self) -> int:
         """Return the length of the dataset."""
 
-        return len(self.tokenized_data) // self.block_size - 1
+        return len(self.tokenized_data) - self.block_size
 
     def __getitem__(self, index: int) -> tuple:
         """Extract the sequence and the target."""
 
-        # Randomly extract a section of the text
-        start_idx = index * self.block_size
-        # idx = start_index + random.randint(0, self.block_size - 1)
-
         # Extract the input and target sequences
-        input = self.tokenized_data[start_idx: start_idx + self.block_size]
-        target = self.tokenized_data[start_idx + 1:start_idx + self.block_size + 1]
-        return Tensor(input), Tensor(target)
+        inputs = self.tokenized_data[index: index + self.block_size]
+        target = self.tokenized_data[index + 1:index+ self.block_size + 1]
+
+        return Tensor(inputs), Tensor(target)
