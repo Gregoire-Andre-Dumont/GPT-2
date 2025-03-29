@@ -28,7 +28,7 @@ torch_trainer:
     n_embedding: 512
     block_size: 1024
     n_layer: 6
-    n_head: 6
+    n_head: 8
     dropout: 0.0
     bias: True
     kv_heads: 4
