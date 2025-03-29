@@ -95,10 +95,10 @@ class MainDataset(Dataset):
         """Extract the sequence and the target."""
 
         # Randomly extract a section of the text
-        start_index = index * self.block_size
-        idx = start_index + random.randint(0, self.block_size - 1)
+        start_idx = index * self.block_size
+        # idx = start_index + random.randint(0, self.block_size - 1)
 
         # Extract the input and target sequences
-        input = self.tokenized_data[idx: idx + self.block_size]
-        target = self.tokenized_data[idx + 1:idx + self.block_size + 1]
+        input = self.tokenized_data[start_idx: start_idx + self.block_size]
+        target = self.tokenized_data[start_idx + 1:start_idx + self.block_size + 1]
         return Tensor(input), Tensor(target)
