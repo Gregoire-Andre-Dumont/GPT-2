@@ -138,6 +138,10 @@ class MainTrainer:
             self.last_val_loss = self.val_one_epoch(valid_loader, epoch)
             val_losses.append(self.last_val_loss)
 
+            # Step the scheduler
+            if self.scheduler is not None:
+                self.scheduler.step(epoch=epoch + 1)
+
             # Check whether wandb is initialized
             if wandb.run:
                 # Log the training and validation loss to wandb
@@ -164,7 +168,6 @@ class MainTrainer:
                 if self.early_stopping_counter >= self.patience:
                     self.logger.info("Early stopping!")
                     return sum(val_losses) / len(val_losses)
-
         return sum(val_losses) / len(val_losses)
 
     def train_one_epoch(self, loader: DataLoader, epoch: int) -> float:
