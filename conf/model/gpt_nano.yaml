@@ -16,7 +16,7 @@ torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
   epochs: 60
   patience: 30
-  learning_rate: 1e-4
+  learning_rate: 6e-4
   save_model: False
   scheduler_param:
     t_initial: 40
