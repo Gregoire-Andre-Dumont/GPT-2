@@ -34,6 +34,9 @@ class CausalAttention(nn.Module):
         # Prevent standard deviation creep
         self.init_weight_normalization_flag = True
 
+        register_buffer = torch.tril(torch.ones(self.block_size, self.block_size))
+        self.register_buffer("bias", register_buffer.view(1, 1, self.block_size, self.block_size))
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """forward pass of the attention module."""
 
