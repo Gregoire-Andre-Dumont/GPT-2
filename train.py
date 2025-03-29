@@ -59,7 +59,9 @@ def run_train(cfg: DictConfig) -> None:
 
     # Train or fine-tune the GPT-2 model
     section_separator("Train and validate the GPT-2 model")
-    valid_loss = trainer.custom_train(train_loader, valid_loader)
+    trainer.custom_train(train_loader, valid_loader)
+
+    valid_loss = trainer.predict_score(valid_loader)
     test_loss = trainer.predict_score(test_loader)
 
     if wandb.run:
