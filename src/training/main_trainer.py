@@ -170,7 +170,7 @@ class MainTrainer:
                     self.logger.info("Early stopping!")
                     return sum(val_losses) / len(val_losses)
 
-            return sum(val_losses) / len(val_losses)
+        return sum(val_losses) / len(val_losses)
 
     def train_one_epoch(self, loader: DataLoader, epoch: int) -> float:
         """Train the model for one epoch and compute its loss.
