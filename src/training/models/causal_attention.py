@@ -40,7 +40,7 @@ class CausalAttention(nn.Module):
         B, T, C = x.size()
 
         # Compute the query, key and values for all heads in the batch
-        query, key, value = self.c_attn(x).split(self.n_embd, dim=2)
+        query, key, value = self.c_attn(x).split(self.n_embed, dim=2)
         key = key.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         query = query.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         value = value.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
