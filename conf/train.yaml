@@ -2,9 +2,9 @@ defaults:
   - model: gpt_nano
 
 # Path to the training and validation data
-train_path: data/text8/train.parquet
-valid_path: data/text8/validation.parquet
-test_path: data/text8/test.parquet
+train_path: data/shakespeare/train.csv
+valid_path: data/shakespeare/validation.csv
+test_path: data/shakespeare/test.csv
 
 # Reduce the data for development
 development: False # 20000 or False
