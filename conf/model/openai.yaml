@@ -21,4 +21,4 @@ torch_trainer:
     warmup_lr_init: 1e-5
   model:
     _target_: src.training.models.openai.OpenAI
-    model_name: distilgpt2
+    model_name: gpt2
