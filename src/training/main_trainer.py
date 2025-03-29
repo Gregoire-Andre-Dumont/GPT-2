@@ -75,7 +75,7 @@ class MainTrainer:
 
         # Train the large language model
         self.logger.info(f"Train the model for {self.epochs} epochs")
-        self._training_loop(train_loader, valid_loader)
+        valid_score = self._training_loop(train_loader, valid_loader)
 
         # Revert to the model with the best validation loss
         self.logger.info(f"Done training the model {self.model_name}")
@@ -86,6 +86,7 @@ class MainTrainer:
 
         # save the model if necessary
         self._save_model() if self.save_model else None
+        return valid_score
 
     def create_path(self, config: dict):
         """Create the model path using the config hash."""
@@ -167,7 +168,9 @@ class MainTrainer:
                 self.early_stopping_counter += 1
                 if self.early_stopping_counter >= self.patience:
                     self.logger.info("Early stopping!")
-                    break
+                    return sum(val_losses) / len(val_losses)
+
+            return sum(val_losses) / len(val_losses)
 
     def train_one_epoch(self, loader: DataLoader, epoch: int) -> float:
         """Train the model for one epoch and compute its loss.
