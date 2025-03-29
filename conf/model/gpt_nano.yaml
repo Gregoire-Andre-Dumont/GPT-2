@@ -14,8 +14,8 @@ dataloader:
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
-  epochs: 20
-  patience: 5
+  epochs: 30
+  patience: 10
   learning_rate: 6e-4
   save_model: False
   scheduler_param:
@@ -26,8 +26,8 @@ torch_trainer:
     _target_: src.training.models.gpt_model.GPT
     vocab_size: 50304
     n_embedding: 512
-    block_size: 512
-    n_layer: 4
+    block_size: 1024
+    n_layer: 6
     n_head: 8
     dropout: 0.0
     bias: True
