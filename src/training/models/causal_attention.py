@@ -21,15 +21,15 @@ class CausalAttention(nn.Module):
         self.dropout: float = config['dropout']
 
         # Initialize the linear projections
-        self.c_proj = nn.Linear(self.n_embd, self.n_embd, bias=self.bias)
-        self.c_attn = nn.Linear(self.n_embd, 3 * self.n_embd, bias=self.bias)
+        self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=self.bias)
+        self.c_attn = nn.Linear(self.n_embed, 3 * self.n_embed, bias=self.bias)
 
         # Initialize the regularization
         self.attn_dropout = nn.Dropout(self.dropout)
         self.resid_dropout = nn.Dropout(self.dropout)
 
         # Initialize the rotary positional embedding
-        self.rotary_emb = RotaryEmbedding(dim=self.n_embd // self.n_head)
+        self.rotary_emb = RotaryEmbedding(dim=self.n_embed // self.n_head)
 
         # Prevent standard deviation creep
         self.init_weight_normalization_flag = True
