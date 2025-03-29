@@ -19,6 +19,7 @@ class CausalAttention(nn.Module):
         bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
+        self.block_size: int = config['block_size']
 
         # Initialize the linear projections
         self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=bias)
