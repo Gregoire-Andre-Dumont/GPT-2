@@ -62,7 +62,6 @@ def run_train(cfg: DictConfig) -> None:
     valid_loss = trainer.custom_train(train_loader, valid_loader)
     test_loss = trainer.predict_score(test_loader)
 
-
     if wandb.run:
         wandb.log({"Validation Score": valid_loss})
         wandb.log({"Test Score": test_loss})

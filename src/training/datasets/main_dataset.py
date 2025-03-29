@@ -1,5 +1,6 @@
 """Main torch dataset for pre-training the GPT-2 model."""
 
+import tiktoken
 import warnings
 import torch
 from torch import Tensor
@@ -34,11 +35,9 @@ class MainDataset(Dataset):
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
 
-        self.augment = augment
-
         # Load the necessary tokenizers and models
-        self.tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        self.tokenizer = tiktoken.get_encoding('gpt2')
+        self.augment = augment
         self.tokenized_data = self.tokenizer.encode(text)
 
 
@@ -103,4 +102,3 @@ class MainDataset(Dataset):
         input = self.tokenized_data[idx: idx + self.block_size]
         target = self.tokenized_data[idx + 1:idx + self.block_size + 1]
         return Tensor(input), Tensor(target)
-

@@ -12,3 +12,4 @@ torchtune
 torchao
 joblib
 timm
+tiktoken
