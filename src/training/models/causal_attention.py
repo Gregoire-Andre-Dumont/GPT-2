@@ -16,13 +16,13 @@ class CausalAttention(nn.Module):
 
         # Extract the parameters from the config
         self.n_embed: int = config['n_embedding']
-        self.bias: bool = config['bias']
+        bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
 
         # Initialize the linear projections
-        self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=self.bias)
-        self.c_attn = nn.Linear(self.n_embed, 3 * self.n_embed, bias=self.bias)
+        self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=bias)
+        self.c_attn = nn.Linear(self.n_embed, 3 * self.n_embed, bias=bias)
 
         # Initialize the regularization
         self.attn_dropout = nn.Dropout(self.dropout)
