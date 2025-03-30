@@ -10,7 +10,7 @@ dataloader:
     _target_: src.training.datasets.main_dataset.MainDataset
     p_bert: 0.05
     p_augment: 0.00
-    block_size: 1024
+    block_size: 256
 
 torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
@@ -26,10 +26,10 @@ torch_trainer:
     _target_: src.training.models.gpt_model.GPT
     vocab_size: 50304
     n_embedding: 768
-    block_size: 1024
+    block_size: 256
     n_layer: 6
     n_head: 8
     dropout: 0.0
     bias: True
     kv_heads: 4
-    grouped: False
+    grouped: True
