@@ -1,5 +1,5 @@
 defaults:
-  - model: openai
+  - model: gpt_nano
 
 # Path to the training and validation data
 train_path: data/shakespeare/train.csv
