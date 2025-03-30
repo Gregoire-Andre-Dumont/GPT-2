@@ -38,11 +38,6 @@ class GPT(nn.Module):
         # Initialize all the weights
         self.apply(self._init_weights)
 
-        for pn, p in self.named_parameters():
-            if pn.endswith('c_proj.weight'):
-                standard = 0.02 / math.sqrt(2 * self.n_layer)
-                torch.nn.init.normal_(p, mean=0.0, std=standard)
-
     def _init_weights(self, module):
         """Initialize the weights of each layer."""
 
