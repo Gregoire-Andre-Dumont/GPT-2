@@ -1,6 +1,5 @@
 """Module that creates the dataloaders for pre-training, summarization, and question answering."""
 
-from transformers import GPT2Tokenizer
 import pandas as pd
 from torch.utils.data import DataLoader
 
