@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from transformers import GPT2Tokenizer
 from torch.utils.data import Dataset
 from transformers import BertForMaskedLM, BertTokenizer
-from tqdm import tqdm
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message=".*indexing errors.*")
