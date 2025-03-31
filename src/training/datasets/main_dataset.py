@@ -36,8 +36,11 @@ class MainDataset(Dataset):
 
         # Load the necessary tokenizers and models
         self.tokenizer = tiktoken.get_encoding('gpt2')
-        self.augment = augment
         self.tokenized_data = self.tokenizer.encode(text)
+
+        # Augment the data if necessary
+        if self.augment:
+            augmented = self.augment
 
     def process_data(self, text):
         """Data augmentation with mask language modeling."""
@@ -46,43 +49,6 @@ class MainDataset(Dataset):
         self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased").to(device)
         self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
 
-    def data_augment(self, text: str) -> str:
-        """Data augmentation with mask language modeling."""
-
-        tokenized_text = np.array(text)
-
-        # Randomly mask tokens in the text
-        mask = np.random.rand(len(tokenized_text)) < self.p_bert
-        masked_text = np.where(mask, "[MASK]", tokenized_text).tolist()
-        mask_indices = np.where(mask)[0].tolist()
-
-        # Convert to BERT input format
-        indexed_tokens = self.bert_tokenizer.convert_tokens_to_ids(masked_text)
-        tokens_tensor = torch.tensor([indexed_tokens]).to(device)
-
-        # Predict masked tokens
-        with torch.no_grad():
-            outputs = self.bert_model(tokens_tensor)
-            predictions = outputs[0]
-
-        # Extract predicted token indices for all masked positions at once
-        predicted_indices = torch.argmax(predictions[0, mask_indices], dim=1).tolist()
-        predicted_tokens = self.bert_tokenizer.convert_ids_to_tokens(predicted_indices)
-
-        # Replace MASK tokens with predictions
-        augmented_tokens = tokenized_text.copy()
-        for idx, mask_pos in enumerate(mask_indices):
-            augmented_tokens[mask_pos] = predicted_tokens[idx]
-
-        # Convert back to text
-        return self.bert_tokenizer.convert_tokens_to_string(augmented_tokens)
-
-    def pad_sequence(self, sequence: list[int]):
-        """Pad the token sequence to the block size."""
-
-        token_id = self.tokenizer.pad_token_id
-        padding_size = self.block_size - len(sequence)
-        return sequence + [token_id] * padding_size
 
     def __len__(self) -> int:
         """Return the length of the dataset."""
