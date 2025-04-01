@@ -53,7 +53,7 @@ class MainDataset(Dataset):
 
         # Randomly extract a section of the text
         start_idx = index * self.block_size
-        start_idx = start_idx + random.randint(1-self.block_size, self.block_size - 1)
+        start_idx = start_idx + random.randint(0, self.block_size - 1)
         end_idx = start_idx + self.block_size
 
         # Check whether we have to perform augmentation
