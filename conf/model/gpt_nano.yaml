@@ -35,4 +35,4 @@ torch_trainer:
     dropout: 0.2
     bias: True
     kv_heads: 4
-    grouped: False
+    grouped: True
