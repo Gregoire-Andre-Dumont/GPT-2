@@ -5,11 +5,9 @@ import warnings
 import torch
 from torch import Tensor
 import random
-import numpy as np
 from dataclasses import dataclass
-from transformers import GPT2Tokenizer
 from torch.utils.data import Dataset
-from transformers import BertForMaskedLM, BertTokenizer
+from src.training.augments.base_augment import BaseAugment
 
 # Suppress specific warning
 warnings.filterwarnings("ignore", message=".*indexing errors.*")
@@ -30,6 +28,7 @@ class MainDataset(Dataset):
     p_bert: float | None = None
     p_augment: float | None = None
     block_size : int | None = None
+    augmentation: BaseAugment | None = None
 
     def initialize(self, text: str, augment: bool):
         """Initialize the dataloader with the text."""
@@ -39,15 +38,9 @@ class MainDataset(Dataset):
         self.tokenized_data = self.tokenizer.encode(text)
 
         # Augment the data if necessary
-        if self.augment:
-            augmented = self.augment
-
-    def process_data(self, text):
-        """Data augmentation with mask language modeling."""
-
-        # Load the BERT tokenizer and
-        self.bert_model = BertForMaskedLM.from_pretrained("bert-large-uncased").to(device)
-        self.bert_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
+        if augment:
+            self.augmented = self.augmentation.augment_main(text)
+            self.augmented = self.tokenizer.encode(self.augmented)
 
 
     def __len__(self) -> int:

@@ -5,11 +5,12 @@ import numpy as np
 from tqdm import tqdm
 from dataclasses import dataclass
 from transformers import BertForMaskedLM, BertTokenizer
+from src.training.augments.base_augment import BaseAugment
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 @dataclass
-class BertAugment:
+class BertAugment(BaseAugment):
     """Data augmentation with mask language modeling.
     :param p_bert: probability of augmenting tokens."""
 
@@ -42,37 +43,31 @@ class BertAugment:
         # Randomly mask tokens in the text
         masked_text, masked_indices = self.mask_text(text)
 
-        # Convert to BERT input format
+        # Predict the masked tokens
         tokens = self.tokenizer.convert_tokens_to_ids(masked_text)
         tokens = torch.tensor([tokens]).to(device)
 
-        # Predict masked tokens
         with torch.no_grad():
             outputs = self.model(tokens)
-            predictions = outputs[0]
+            predictions = outputs.logits
 
-        # Extract predicted token indices for all masked positions at once
-        predicted_indices = torch.argmax(predictions[0, masked_indices], dim=1)
-        predicted_tokens = self.tokenizer.convert_ids_to_tokens(predicted_indices)
+            predicted_ids = torch.argmax(predictions[0, masked_indices], dim=1)
+            predicted_tokens = self.tokenizer.convert_ids_to_tokens(predicted_ids)
 
         # Replace MASK tokens with predictions
-        augmented_tokens = tokens.copy()
         for idx, mask_pos in enumerate(masked_indices):
-            augmented_tokens[mask_pos] = predicted_tokens[idx]
+            masked_text[mask_pos] = predicted_tokens[idx]
 
-        # Convert back to text
-        return self.tokenizer.convert_tokens_to_string(augmented_tokens)
+        return self.tokenizer.convert_tokens_to_string(masked_text)
 
     def augment_main(self, text: str) -> str:
         """Augmentation for the main dataset."""
 
-        augmented = ""
+        augmented_texts = []
         indices = np.arange(0, len(text), self.block_size)
 
-        # print a progress bar
-        for idx in tqdm(indices, desc="Augmenting"):
+        for idx in tqdm(indices, total=len(indices), desc="Augmenting"):
             batch = text[idx:idx + self.block_size]
-            augmented += self.augment_text(batch)
+            augmented_texts.append(self.augment_text(batch))
 
-        return augmented
-
+        return "".join(augmented_texts)
