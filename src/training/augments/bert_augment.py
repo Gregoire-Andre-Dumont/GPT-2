@@ -14,10 +14,10 @@ class BertAugment(BaseAugment):
     """Data augmentation with mask language modeling.
     :param p_bert: probability of augmenting tokens."""
 
-    p_bert: float = 0.0
-    block_size: int = 512
+    p_bert: float | None = None
+    block_size: int | None = None
 
-    def __init__(self):
+    def __post_init__(self):
         """Load Bert model and tokenizer."""
 
         self.model = BertForMaskedLM.from_pretrained("bert-large-uncased").to(device)
