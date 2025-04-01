@@ -9,7 +9,7 @@ dataloader:
   dataset:
     _target_: src.training.datasets.main_dataset.MainDataset
     p_augment: 0.2
-    block_size: 128
+    block_size: 1024
     augmentation:
       _target_: src.training.augments.bert_augment.BertAugment
       p_bert: 0.2
@@ -28,8 +28,8 @@ torch_trainer:
   model:
     _target_: src.training.models.gpt_model.GPT
     vocab_size: 50304
-    n_embedding: 1024
-    block_size: 128
+    n_embedding: 768
+    block_size: 1024
     n_layer: 12
     n_head: 8
     dropout: 0.2
