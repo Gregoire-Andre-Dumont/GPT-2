@@ -8,8 +8,8 @@ dataloader:
   prefetch_factor: 2
   dataset:
     _target_: src.training.datasets.main_dataset.MainDataset
-    p_bert: 0.00
-    p_augment: 0.00
+    p_bert: 0.2
+    p_augment: 0.2
     block_size: 512
 
 torch_trainer:
@@ -29,7 +29,7 @@ torch_trainer:
     block_size: 512
     n_layer: 6
     n_head: 8
-    dropout: 0.0
+    dropout: 0.2
     bias: True
     kv_heads: 4
     grouped: False

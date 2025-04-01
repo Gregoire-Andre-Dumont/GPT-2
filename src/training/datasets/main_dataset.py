@@ -40,7 +40,7 @@ class MainDataset(Dataset):
         # Augment the data if necessary
         if augment:
             self.augmented = self.augmentation.augment_main(text)
-            self.augmented = self.tokenizer.encode(self.augmented)
+            self.augmented_data = self.tokenizer.encode(self.augmented)
 
 
     def __len__(self) -> int:
@@ -54,6 +54,14 @@ class MainDataset(Dataset):
         # Randomly extract a section of the text
         start_idx = index * self.block_size
         start_idx = start_idx + random.randint(0, self.block_size - 1)
+        end_idx = start_idx + self.block_size
+
+        # Check whether we have to perform augmentation
+        if random.random() < self.p_augment and self.augment:
+            input = self.augmented_data[start_idx:end_idx]
+            target = self.augmented_data[start_idx + 1: end_idx + 1]
+
+            return Tensor(input), Tensor(target)
 
         # Extract the input and target sequences
         input = self.tokenized_data[start_idx: start_idx + self.block_size]
