@@ -12,7 +12,7 @@ def setup_pre_training(cfg, path: str, augment: bool, loader: DataLoader):
     :param loader: dataloader without the text."""
 
     # Extract the text from the dataframe
-    data = pd.read_csv(path)['text'][0]
+    data = pd.read_parquet(path)['text'][0]
     size = cfg.development
     data = data[:size] if size else data
 
