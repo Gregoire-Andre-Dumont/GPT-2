@@ -8,7 +8,7 @@ dataloader:
   prefetch_factor: 2
   dataset:
     _target_: src.training.datasets.main_dataset.MainDataset
-    p_augment: 0.2
+    p_augment: 0.00
     block_size: 512
     augmentation:
       _target_: src.training.augments.bert_augment.BertAugment
