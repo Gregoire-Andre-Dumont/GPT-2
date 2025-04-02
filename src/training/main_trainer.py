@@ -50,10 +50,6 @@ class MainTrainer:
         self.logger = logging.getLogger("logger")
         self.logger.setLevel(logging.DEBUG)
 
-        # Initialize the optimizer and scheduler
-        self.configure_optimizers()
-        self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
-
         # Set the torch model to correct device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger.info(f"setting the device to {self.device}")
@@ -68,6 +64,10 @@ class MainTrainer:
         self.logger.info("Using mixed precision training.")
         self.scaler = torch.GradScaler(device=self.device.type)
         torch.set_float32_matmul_precision("high")
+
+        # Initialize the optimizer and scheduler
+        self.configure_optimizers()
+        self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
 
     def configure_optimizers(self):
         """Configure the adam optimizer."""
