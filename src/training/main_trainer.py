@@ -90,7 +90,7 @@ class MainTrainer:
         use_fused = fused_available and self.device == torch.device('cuda')
 
         extra_args = dict(fused=True) if use_fused else dict()
-        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, betas=(0.9, 0.95), **extra_args)
+        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, betas=(0.9, 0.9), **extra_args)
 
 
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):

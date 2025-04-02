@@ -18,8 +18,6 @@ def setup_pre_training(cfg, path: str, augment: bool, loader: DataLoader):
     data = data[:size] if size else data
 
     # Remove unnecessary characters
-    data = data.replace('\n\n', '\n')
-    data = data.replace('\n', ' ')
 
     # Initialize the dataloader with the text data
     loader.dataset.initialize(data, augment)
