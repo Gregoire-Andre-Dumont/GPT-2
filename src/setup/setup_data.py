@@ -30,6 +30,6 @@ def setup_fine_tuning(cfg, data: DataFrame, augment: bool, loader: DataLoader):
     :param loader: dataloader without the input and output."""
 
     # Extract the texts and classes
-    texts =
+
 
 
