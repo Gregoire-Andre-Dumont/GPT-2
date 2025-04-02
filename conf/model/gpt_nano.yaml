@@ -36,3 +36,4 @@ torch_trainer:
     bias: True
     kv_heads: 4
     grouped: False
+    weight_decay: 1e-1
