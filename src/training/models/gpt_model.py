@@ -1,5 +1,6 @@
 """Module that manages the GPT-2 torch model."""
 
+import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F

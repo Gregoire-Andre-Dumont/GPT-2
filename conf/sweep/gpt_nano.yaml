@@ -13,10 +13,6 @@ parameters:
     distribution: int_uniform
     max: 20
     min: 5
-  model.dataloader.dataset.p_bert:
-    distribution: uniform
-    max: 0.25
-    min: 0.01
   model.torch_trainer.epochs:
     distribution: int_uniform
     max: 25

@@ -4,7 +4,6 @@ import logging
 import warnings
 import os
 import sys
-print(sys.prefix)
 import hydra
 
 import coloredlogs
@@ -20,7 +19,6 @@ from src.utils.separator import section_separator
 warnings.filterwarnings("ignore", category=UserWarning)
 # Makes hydra give full error messages
 os.environ["HYDRA_FULL_ERROR"] = "1"
-
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="train")
@@ -48,7 +46,7 @@ def run_train(cfg: DictConfig) -> None:
 
     train_loader = setup_pre_training(cfg, cfg.train_path, True, deepcopy(loader))
     valid_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
-    test_loader = setup_pre_training(cfg, cfg.valid_path, False, deepcopy(loader))
+    test_loader = setup_pre_training(cfg, cfg.test_path, False, deepcopy(loader))
 
     logger.info(f"Training size: {len(train_loader)}")
     logger.info(f"Validation size: {len(valid_loader)}")
@@ -61,9 +59,10 @@ def run_train(cfg: DictConfig) -> None:
 
     # Train or fine-tune the GPT-2 model
     section_separator("Train and validate the GPT-2 model")
-    valid_loss = trainer.custom_train(train_loader, valid_loader)
-    test_loss = trainer.predict_score(test_loader)
+    trainer.custom_train(train_loader, valid_loader)
 
+    valid_loss = trainer.predict_score(valid_loader)
+    test_loss = trainer.predict_score(test_loader)
 
     if wandb.run:
         wandb.log({"Validation Score": valid_loss})

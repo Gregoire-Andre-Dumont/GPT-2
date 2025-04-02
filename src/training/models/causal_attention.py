@@ -16,23 +16,27 @@ class CausalAttention(nn.Module):
 
         # Extract the parameters from the config
         self.n_embed: int = config['n_embedding']
-        self.bias: bool = config['bias']
+        bias: bool = config['bias']
         self.n_head: int = config['n_head']
         self.dropout: float = config['dropout']
+        self.block_size: int = config['block_size']
 
         # Initialize the linear projections
-        self.c_proj = nn.Linear(self.n_embd, self.n_embd, bias=self.bias)
-        self.c_attn = nn.Linear(self.n_embd, 3 * self.n_embd, bias=self.bias)
+        self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=bias)
+        self.c_attn = nn.Linear(self.n_embed, 3 * self.n_embed, bias=bias)
 
         # Initialize the regularization
         self.attn_dropout = nn.Dropout(self.dropout)
         self.resid_dropout = nn.Dropout(self.dropout)
 
         # Initialize the rotary positional embedding
-        self.rotary_emb = RotaryEmbedding(dim=self.n_embd // self.n_head)
+        self.rotary_emb = RotaryEmbedding(dim=self.n_embed // self.n_head)
 
         # Prevent standard deviation creep
         self.init_weight_normalization_flag = True
+
+        register_buffer = torch.tril(torch.ones(self.block_size, self.block_size))
+        self.register_buffer("bias", register_buffer.view(1, 1, self.block_size, self.block_size))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """forward pass of the attention module."""
@@ -40,7 +44,7 @@ class CausalAttention(nn.Module):
         B, T, C = x.size()
 
         # Compute the query, key and values for all heads in the batch
-        query, key, value = self.c_attn(x).split(self.n_embd, dim=2)
+        query, key, value = self.c_attn(x).split(self.n_embed, dim=2)
         key = key.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         query = query.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         value = value.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)

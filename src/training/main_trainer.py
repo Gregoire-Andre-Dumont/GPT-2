@@ -1,5 +1,6 @@
 """Module that manages the torch trainer for training LLMs."""
 
+import inspect
 import gc
 import copy
 import wandb
@@ -11,7 +12,7 @@ from typing import Any
 import numpy as np
 from torch import Tensor, nn
 from dataclasses import dataclass, field
-from torch.optim import Adam
+from torch.optim import Adam, AdamW
 from pathlib import Path
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
@@ -40,6 +41,7 @@ class MainTrainer:
     patience: int = 5
     learning_rate: float = 6e-4
     scheduler_param: dict | None = None
+    weight_decay: float = 1e-5
 
     def __post_init__(self):
         """Initialize the model and other parameters."""
@@ -49,7 +51,7 @@ class MainTrainer:
         self.logger.setLevel(logging.DEBUG)
 
         # Initialize the optimizer and scheduler
-        self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
+        self.configure_optimizers()
         self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
 
         # Set the torch model to correct device
@@ -62,6 +64,35 @@ class MainTrainer:
         self.lowest_val_loss = np.inf
         self.best_model_state_dict: dict[Any, Any] = {}
 
+        # Mixed precision trainer
+        self.logger.info("Using mixed precision training.")
+        self.scaler = torch.GradScaler(device=self.device.type)
+        torch.set_float32_matmul_precision("high")
+
+    def configure_optimizers(self):
+        """Configure the adam optimizer."""
+
+        # Filter the parameters that don't require grad
+        param_dict = {pn: p for pn, p in self.model.named_parameters()}
+        param_dict = {pn: p for pn, p in param_dict.items() if p.requires_grad}
+
+        # Any 2D parameters will be weight decayed, otherwise no
+        decay_params = [p for n, p in param_dict.items() if p.dim() >= 2]
+        nodecay_params = [p for n, p in param_dict.items() if p.dim() < 2]
+
+        optim_groups = [
+            {'params': decay_params, 'weight_decay': self.weight_decay},
+            {'params': nodecay_params, 'weight_decay': 0.0}]
+
+
+        # Create AdamW optimizer and use the fused version if it is available
+        fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = fused_available and self.device == torch.device('cuda')
+
+        extra_args = dict(fused=True) if use_fused else dict()
+        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, betas=(0.9, 0.95), **extra_args)
+
+
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
         """Train and evaluate the large language model.
 
@@ -70,7 +101,7 @@ class MainTrainer:
 
         # Train the large language model
         self.logger.info(f"Train the model for {self.epochs} epochs")
-        self._training_loop(train_loader, valid_loader)
+        valid_score = self._training_loop(train_loader, valid_loader)
 
         # Revert to the model with the best validation loss
         self.logger.info(f"Done training the model {self.model_name}")
@@ -81,6 +112,7 @@ class MainTrainer:
 
         # save the model if necessary
         self._save_model() if self.save_model else None
+        return valid_score
 
     def create_path(self, config: dict):
         """Create the model path using the config hash."""
@@ -137,6 +169,10 @@ class MainTrainer:
             self.last_val_loss = self.val_one_epoch(valid_loader, epoch)
             val_losses.append(self.last_val_loss)
 
+            # # Step the scheduler
+            # if self.scheduler is not None:
+            #     self.scheduler.step(epoch=epoch + 1)
+
             # Check whether wandb is initialized
             if wandb.run:
                 # Log the training and validation loss to wandb
@@ -162,7 +198,8 @@ class MainTrainer:
                 self.early_stopping_counter += 1
                 if self.early_stopping_counter >= self.patience:
                     self.logger.info("Early stopping!")
-                    break
+                    return sum(val_losses) / len(val_losses)
+        return sum(val_losses) / len(val_losses)
 
     def train_one_epoch(self, loader: DataLoader, epoch: int) -> float:
         """Train the model for one epoch and compute its loss.
@@ -182,14 +219,16 @@ class MainTrainer:
             X_batch = X_batch.to(self.device, dtype=torch.int64)
             y_batch = y_batch.to(self.device, dtype=torch.int64)
 
-            # Forward and backward pass
-            _, loss = self.model(X_batch, y_batch)
-            losses.append(loss.item())
+            with torch.autocast(self.device.type):
+                # Forward and backward pass
+                _, loss = self.model(X_batch, y_batch)
 
-            loss.backward()
-            self.optimizer.step()
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
 
             # Print the progress bar
+            losses.append(loss.item())
             mean_loss = sum(losses) / len(losses)
             progress_bar.set_postfix(loss=mean_loss)
 
