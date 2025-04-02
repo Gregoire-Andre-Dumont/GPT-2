@@ -1,5 +1,6 @@
 """Module that manages the torch trainer for training LLMs."""
 
+import inspect
 import gc
 import copy
 import wandb
@@ -11,7 +12,7 @@ from typing import Any
 import numpy as np
 from torch import Tensor, nn
 from dataclasses import dataclass, field
-from torch.optim import Adam
+from torch.optim import Adam, AdamW
 from pathlib import Path
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
@@ -40,6 +41,7 @@ class MainTrainer:
     patience: int = 5
     learning_rate: float = 6e-4
     scheduler_param: dict | None = None
+    weight_decay: float = 1e-5
 
     def __post_init__(self):
         """Initialize the model and other parameters."""
@@ -49,7 +51,7 @@ class MainTrainer:
         self.logger.setLevel(logging.DEBUG)
 
         # Initialize the optimizer and scheduler
-        self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
+        self.configure_optimizers()
         self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
 
         # Set the torch model to correct device
@@ -66,6 +68,30 @@ class MainTrainer:
         self.logger.info("Using mixed precision training.")
         self.scaler = torch.GradScaler(device=self.device.type)
         torch.set_float32_matmul_precision("high")
+
+    def configure_optimizers(self):
+        """Configure the adam optimizer."""
+
+        # Filter the parameters that don't require grad
+        param_dict = {pn: p for pn, p in self.model.named_parameters()}
+        param_dict = {pn: p for pn, p in param_dict.items() if p.requires_grad}
+
+        # Any 2D parameters will be weight decayed, otherwise no
+        decay_params = [p for n, p in param_dict.items() if p.dim() >= 2]
+        nodecay_params = [p for n, p in param_dict.items() if p.dim() < 2]
+
+        optim_groups = [
+            {'params': decay_params, 'weight_decay': self.weight_decay},
+            {'params': nodecay_params, 'weight_decay': 0.0}]
+
+
+        # Create AdamW optimizer and use the fused version if it is available
+        fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = fused_available and self.device == torch.device('cuda')
+
+        extra_args = dict(fused=True) if use_fused else dict()
+        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, betas=(0.9, 0.95), **extra_args)
+
 
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
         """Train and evaluate the large language model.

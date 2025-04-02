@@ -24,7 +24,7 @@ torch_trainer:
   scheduler_param:
     t_initial: 40
     warmup_t: 1
-    warmup_lr_init: 1e-5
+    warmup_lr_init: 1e-4
   model:
     _target_: src.training.models.gpt_model.GPT
     vocab_size: 50304
