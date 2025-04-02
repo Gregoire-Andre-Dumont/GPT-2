@@ -28,9 +28,9 @@ torch_trainer:
   model:
     _target_: src.training.models.gpt_model.GPT
     vocab_size: 50304
-    n_embedding: 768
+    n_embedding: 128
     block_size: 512
-    n_layer: 8
+    n_layer: 6
     n_head: 8
     dropout: 0.2
     bias: True
