@@ -52,8 +52,8 @@ class CausalAttention(nn.Module):
         query = query.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         value = value.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
 
-        # query = self.rotary_emb.rotate_queries_or_keys(query)
-        # key = self.rotary_emb.rotate_queries_or_keys(key)
+        query = self.rotary_emb.rotate_queries_or_keys(query)
+        key = self.rotary_emb.rotate_queries_or_keys(key)
 
         # Manual implementation of the attention module
         att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(key.size(-1)))
