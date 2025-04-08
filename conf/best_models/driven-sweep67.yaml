@@ -1,0 +1,39 @@
+defaults:
+  - _self_
+
+dataloader:
+  _target_: torch.utils.data.DataLoader
+  batch_size: 16
+  num_workers: 5
+  prefetch_factor: 2
+  dataset:
+    _target_: src.training.datasets.main_dataset.MainDataset
+    p_augment: 0.2593523645624361
+    block_size: 512
+    augmentation:
+      _target_: src.training.augments.bert_augment.BertAugment
+      p_bert: 0.022157239626098543
+      block_size: 512
+
+torch_trainer:
+  _target_: src.training.main_trainer.MainTrainer
+  epochs: 47
+  patience: 21
+  learning_rate: 0.00012976887860012906
+  save_model: False
+  scheduler_param:
+    t_initial: 77
+    warmup_t: 4
+    warmup_lr_init: 0.00000376122217389593
+  model:
+    _target_: src.training.models.gpt_model.GPT
+    vocab_size: 50304
+    n_embedding: 768
+    block_size: 512
+    n_layer: 6
+    n_head: 8
+    dropout: 0.0342487871468737
+    bias: True
+    kv_heads: 4
+    grouped: False
+    weight_decay: 1e-1
