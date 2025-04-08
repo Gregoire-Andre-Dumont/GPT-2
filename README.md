@@ -46,18 +46,11 @@ Once configured, the training runs will automatically log the metrics and visual
 
 ## Run wandb sweeps
 
-This project uses the sweep functionality from Wandb to perform hyperparameter optimization.
+This project uses the sweep functionality from Wandb to perform hyperparameter optimization. On the Wandb platform, you should create a sweep configuration where you specify your parameters, their ranges and distributions. Our default sweep configuration is stored in the conf/sweep/gpt_nano.yaml file. To start a sweep, you should copy your wandb agent command from the sweep overview and run it in your terminal. Before doing so, you should make sure that your virtual environment is activated and use python3 instead of python when executing scripts to avoid compatibility issues. 
 
-1. Create a sweep configuration in the wandb platform by. our swwep configuration is stored in `conf/sweep/gpt_nano`
-   - you should define which parameters you want to optimize
-   - you should specificy the ranges for each parameter
-   - you should select the distribution type (uniform, log_uniform, categorical)
-  
-2. Once your sweep is configured in the wandb interface, you'll receive a command similar to
-    ```shell
-   wandb agent project_name/sweep_id
-   ```
-3. Paste and run the wandb agent command in your terminal to start the hyperparameter optimization process. You should make sure that your virtual environment is activated and uses python3 instead of python.
+ ```shell
+wandb agent project_name/sweep_id
+```
 
 
 
