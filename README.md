@@ -12,7 +12,7 @@ This project was developed on Windows 11 os on Python 3.12 and Ubuntu on Python 
 Make sure to clone the repository with your favourite git client or using the following command:
 
 ```
-https://github.com/Gregoire-Andre-Dumont/GPT-2.git
+git clone https://github.com/Gregoire-Andre-Dumont/GPT-2.git
 ```
 
 ### 2. Install the required packages
