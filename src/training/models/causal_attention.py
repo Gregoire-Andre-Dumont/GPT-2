@@ -21,6 +21,9 @@ class CausalAttention(nn.Module):
         self.dropout: float = config['dropout']
         self.block_size: int = config['block_size']
 
+        # Prevent standard deviation creep.
+        self.init_weight_normalization_flag = True
+
         # Initialize the linear projections
         self.c_proj = nn.Linear(self.n_embed, self.n_embed, bias=bias)
         self.c_attn = nn.Linear(self.n_embed, 3 * self.n_embed, bias=bias)
@@ -66,3 +69,4 @@ class CausalAttention(nn.Module):
 
         # output projection
         return self.resid_dropout(self.c_proj(y))
+

@@ -8,7 +8,7 @@ dataloader:
   prefetch_factor: 2
   dataset:
     _target_: src.training.datasets.main_dataset.MainDataset
-    p_augment: 0.2
+    p_augment: 0.00
     block_size: 512
     augmentation:
       _target_: src.training.augments.bert_augment.BertAugment
@@ -19,7 +19,7 @@ torch_trainer:
   _target_: src.training.main_trainer.MainTrainer
   epochs: 80
   patience: 80
-  learning_rate: 6e-5
+  learning_rate: 6e-4
   save_model: False
   scheduler_param:
     t_initial: 40
@@ -30,9 +30,10 @@ torch_trainer:
     vocab_size: 50304
     n_embedding: 768
     block_size: 512
-    n_layer: 16
-    n_head: 16
+    n_layer: 6
+    n_head: 8
     dropout: 0.2
     bias: True
     kv_heads: 4
-    grouped: True
+    grouped: False
+    weight_decay: 1e-1

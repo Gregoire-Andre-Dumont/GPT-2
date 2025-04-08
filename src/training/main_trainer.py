@@ -50,10 +50,6 @@ class MainTrainer:
         self.logger = logging.getLogger("logger")
         self.logger.setLevel(logging.DEBUG)
 
-        # Initialize the optimizer and scheduler
-        self.configure_optimizers()
-        self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
-
         # Set the torch model to correct device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.logger.info(f"setting the device to {self.device}")
@@ -68,6 +64,10 @@ class MainTrainer:
         self.logger.info("Using mixed precision training.")
         self.scaler = torch.GradScaler(device=self.device.type)
         torch.set_float32_matmul_precision("high")
+
+        # Initialize the optimizer and scheduler
+        self.configure_optimizers()
+        self.scheduler = CosineLRScheduler(optimizer=self.optimizer, **self.scheduler_param)
 
     def configure_optimizers(self):
         """Configure the adam optimizer."""
@@ -90,7 +90,7 @@ class MainTrainer:
         use_fused = fused_available and self.device == torch.device('cuda')
 
         extra_args = dict(fused=True) if use_fused else dict()
-        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, betas=(0.9, 0.95), **extra_args)
+        self.optimizer = AdamW(optim_groups, lr=self.learning_rate, **extra_args)
 
 
     def custom_train(self, train_loader: DataLoader, valid_loader: DataLoader):
@@ -169,9 +169,9 @@ class MainTrainer:
             self.last_val_loss = self.val_one_epoch(valid_loader, epoch)
             val_losses.append(self.last_val_loss)
 
-            # # Step the scheduler
-            # if self.scheduler is not None:
-            #     self.scheduler.step(epoch=epoch + 1)
+            # Step the scheduler
+            if self.scheduler is not None:
+                self.scheduler.step(epoch=epoch + 1)
 
             # Check whether wandb is initialized
             if wandb.run:

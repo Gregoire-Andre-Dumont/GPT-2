@@ -13,3 +13,4 @@ torchao
 joblib
 timm
 tiktoken
+peft

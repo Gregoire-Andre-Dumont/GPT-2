@@ -17,6 +17,8 @@ def setup_pre_training(cfg, path: str, augment: bool, loader: DataLoader):
     size = cfg.development
     data = data[:size] if size else data
 
+    # Remove unnecessary characters
+
     # Initialize the dataloader with the text data
     loader.dataset.initialize(data, augment)
     return loader
@@ -30,6 +32,6 @@ def setup_fine_tuning(cfg, data: DataFrame, augment: bool, loader: DataLoader):
     :param loader: dataloader without the input and output."""
 
     # Extract the texts and classes
-    texts =
+
 
 
