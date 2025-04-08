@@ -48,7 +48,7 @@ Once configured, the training runs will automatically log the metrics and visual
 
 This project uses the sweep functionality from Wandb to perform hyperparameter optimization.
 
-1. Create a sweep configuration in the wandb platform by. our swwep configuration is stored in `conf/sweep/gpt_nano`
+1. Create a sweep configuration in the wandb platform by. our sweep configuration is stored in `conf/sweep/gpt_nano`
    - you should define which parameters you want to optimize
    - you should specificy the ranges for each parameter
    - you should select the distribution type (uniform, log_uniform, categorical)
