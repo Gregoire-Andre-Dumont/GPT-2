@@ -24,21 +24,12 @@ pip install -r requirements.txt
 ```
 
 ### 3. Create Wandb account
+This project uses Weights & Biases (Wandb) to visualize and track training results. To use this feature, you should create a free account at [wandb.ai](https://wandb.ai/site) if you don't already have one.  Next, modify the setup/setup_wandb.py file with your specific project name. Then you need authenticate your wandb account by running the following command in the terminal and paste your API token. You can find this token in your wandb account settings. Once configured, the training runs will automatically log the metrics and visualizations to your wandb dashboard. This allows you to monitor the training progress, compare experiments, and share results with collaborators.
 
-This project uses Weights & Biases (wandb) to visualize and track training results. To use this functionality:
+```shell
+wandb login --relogin
+```
 
-1. Create a free account at [wandb.ai](https://wandb.ai/site) if you don't already have one.
-   
-2. Modify the `setup/setup_wandb.py` file with your specific project name
-   
-3. Authenticate your wandb account by running in the terminal
-   ```shell
-   wandb login --relogin
-   ```
-   
-4. Paste your API token when prompted. You can find your API token in your wandb account settings.
-
-Once configured, the training runs will automatically log the metrics and visualizations to your wandb dashboard. This allows you to monitor the training progress, compare experiments, and share results with collaborators.
 
 ## Run train
 
